@@ -293,41 +293,68 @@ export const accountantSidebarConfig: SidebarConfig = {
 export const adminSidebarConfig: SidebarConfig = {
   navMain: [
     {
-      title: "Painel de Controlo",
-      url: "#",
+      title: "Painel Administrativo",
+      url: "/admin",
       icon: Home,
       isActive: true,
       items: [
         {
           title: "Visão Geral",
-          url: "#",
+          url: "/admin",
         },
         {
           title: "Métricas do Sistema",
-          url: "#",
+          url: "/admin/metrics",
         },
         {
           title: "Logs de Auditoria",
-          url: "#",
+          url: "/admin/logs",
+        },
+      ],
+    },
+    {
+      title: "Gestão de Solicitações",
+      url: "/admin/requests",
+      icon: FileText,
+      items: [
+        {
+          title: "Todas as Solicitações",
+          url: "/admin/requests",
+        },
+        {
+          title: "Pendentes",
+          url: "/admin/requests?status=pending",
+        },
+        {
+          title: "Aprovadas",
+          url: "/admin/requests?status=approved",
+        },
+        {
+          title: "Rejeitadas",
+          url: "/admin/requests?status=rejected",
         },
       ],
     },
     {
       title: "Gestão de Utilizadores",
-      url: "#",
+      url: "/admin/users",
       icon: UserCog,
       items: [
         {
-          title: "Utilizadores",
-          url: "#",
+          title: "Todos os Utilizadores",
+          url: "/admin/users",
         },
         {
-          title: "Permissões",
-          url: "#",
+          title: "Utilizadores Ativos",
+          url: "/admin/users?status=active",
         },
         {
-          title: "Grupos",
-          url: "#",
+          title: "Utilizadores Inativos",
+          url: "/admin/users?status=inactive",
+        },
+        {
+          title: "Administradores",
+          url: "/admin/users?role=admin",
         },
       ],
     },

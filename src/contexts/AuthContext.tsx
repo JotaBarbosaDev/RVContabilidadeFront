@@ -27,6 +27,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   login: (username: string, password: string) => Promise<void>;
+  register: (formData: RegisterFormData) => Promise<{ message: string; requestId?: string }>;
   logout: (callApi?: boolean) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -39,6 +40,31 @@ interface AuthContextType {
   // Funções de token
   isTokenValid: () => boolean;
   checkTokenExpiry: () => void;
+}
+
+interface RegisterFormData {
+  type: 'existing-client' | 'new-client';
+  name: string;
+  nif: string;
+  email: string;
+  phone: string;
+  businessType?: string;
+  businessTypeOther?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  accessType?: string;
+  accountingRegime?: string;
+  estimatedRevenue?: string;
+  monthlyDocuments?: string;
+  documentDelivery?: string;
+  invoicingTool?: string;
+  hasActivity?: string;
+  hasSocialSecurity?: string;
+  hasEmployees?: string;
+  hasDebts?: string;
+  observations?: string;
+  documents?: File[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -218,6 +244,83 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const register = async (formData: RegisterFormData): Promise<{ message: string; requestId?: string }> => {
+    try {
+      // Mapear dados do frontend para o formato esperado pelo backend DTO
+      const registrationData = {
+        // Campos obrigatórios do RegistrationRequestDTO
+        Username: formData.email, // Usar email como username
+        Password: "temp123", // Password temporário - será alterado no primeiro login
+        CompanyName: formData.name,
+        NIPC: formData.nif,
+        PostalCode: formData.postalCode || "", // Campo obrigatório
+        
+        // Campos adicionais
+        Email: formData.email,
+        Phone: formData.phone,
+        Type: formData.type,
+        Address: formData.address || "",
+        City: formData.city || "",
+        
+        // Campos específicos para novos clientes
+        ...(formData.type === 'new-client' && {
+          BusinessType: formData.businessType || "",
+          BusinessTypeOther: formData.businessTypeOther || "",
+          AccountingRegime: formData.accountingRegime || "",
+          EstimatedRevenue: formData.estimatedRevenue || "",
+          MonthlyDocuments: formData.monthlyDocuments || "",
+          DocumentDelivery: formData.documentDelivery || "",
+          InvoicingTool: formData.invoicingTool || "",
+          HasActivity: formData.hasActivity || "",
+          HasSocialSecurity: formData.hasSocialSecurity || "",
+          HasEmployees: formData.hasEmployees || "",
+          HasDebts: formData.hasDebts || "",
+          Observations: formData.observations || ""
+        }),
+        
+        // Campos específicos para clientes existentes
+        ...(formData.type === 'existing-client' && {
+          AccessType: formData.accessType || ""
+        })
+      };
+
+      console.log('Sending registration data to backend:', registrationData);
+
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(registrationData)
+      });
+
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        let errorMessage = 'Erro ao enviar solicitação';
+        try {
+          const errorData = await response.json();
+          console.log('Error response:', errorData);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch {
+          console.log('Could not parse error response');
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log('Success response:', data);
+      
+      return {
+        message: data.message || 'Solicitação enviada com sucesso',
+        requestId: data.requestId
+      };
+    } catch (error) {
+      console.error('Register error:', error);
+      throw error;
+    }
+  };
+
   const isAuthenticated = user !== null;
 
   // Funções de permissão
@@ -284,6 +387,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       user, 
       login, 
       logout, 
+      register,
       isAuthenticated,
       isLoading,
       hasPermission,

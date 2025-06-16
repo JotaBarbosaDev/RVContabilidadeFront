@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calculator, Eye, EyeOff, Building } from "lucide-react";
+import { ArrowLeft, Calculator, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -132,32 +132,6 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* Quick Access Demo */}
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Acesso rápido (Demo)</span>
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full h-10 text-sm justify-start"
-                  onClick={() => {
-                    setUsername('joaosilva');
-                    setPassword('123456');
-                  }}
-                >
-                  <Building className="h-4 w-4 mr-2 text-accounting-secondary" />
-                  Demo - João Silva
-                </Button>
-              </div>
-            </div>
-
           </CardContent>
         </Card>
 
@@ -165,9 +139,9 @@ export default function LoginPage() {
         <div className="text-center mt-8">
           <p className="text-sm text-muted-foreground">
             Não tem conta?{" "}
-            <button className="text-accounting-primary hover:text-accounting-primary/80 font-medium transition-colors">
+            <Link to="/register" className="text-accounting-primary hover:text-accounting-primary/80 font-medium transition-colors">
               Solicite acesso
-            </button>
+            </Link>
           </p>
         </div>
       </div>
