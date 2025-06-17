@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/useAuth"
+import { useAdmin } from "@/hooks/useAdmin"
 import { 
   Building,
   FileText,
@@ -15,11 +16,53 @@ import {
   Users,
   Activity,
   Shield,
-  Database
+  Database,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  AlertCircle,
+  Check,
+  X
 } from "lucide-react"
+import { useEffect, useState, useRef } from "react"
 
 export default function NewDashboardPage() {
   const { user, getAccessibleCompanies } = useAuth();
+  const adminContext = useAdmin();
+  const [processingRequest, setProcessingRequest] = useState<string | null>(null);
+  const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    if (user?.type === 'accountant' && adminContext?.fetchPendingRequests && !hasInitialized.current) {
+      hasInitialized.current = true;
+      adminContext.fetchPendingRequests();
+    }
+  }); // Removendo array de dependências para evitar loops
+
+  const handleApproveRequest = async (requestId: string, approved: boolean) => {
+    const action = approved ? 'aprovar' : 'rejeitar';
+    const confirmMessage = `Tem certeza que deseja ${action} este pedido?`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setProcessingRequest(requestId);
+    try {
+      if (adminContext?.approveRequest) {
+        await adminContext.approveRequest(requestId, approved);
+        // Mostrar feedback de sucesso
+        alert(`Pedido ${approved ? 'aprovado' : 'rejeitado'} com sucesso!`);
+      }
+    } catch (error) {
+      console.error('Erro ao processar pedido:', error);
+      alert(`Erro ao ${action} o pedido. Tente novamente.`);
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
 
   if (!user) {
     return <div>Carregando...</div>;
@@ -99,53 +142,59 @@ export default function NewDashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Total de Clientes</CardTitle>
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Total de Clientes
+              </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-card-foreground">24</div>
-              <p className="text-xs text-muted-foreground">
-                +2 este mês
-              </p>
+              <p className="text-xs text-muted-foreground">+2 este mês</p>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Receita Mensal</CardTitle>
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Honorários
+              </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">€15.200</div>
+              <div className="text-2xl font-bold text-card-foreground">
+                €210
+              </div>
               <p className="text-xs text-muted-foreground">
-                +12% vs mês anterior
+                +12% mês anterior
               </p>
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Obrigações Pendentes</CardTitle>
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Obrigações Pendentes
+              </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-card-foreground">7</div>
-              <p className="text-xs text-muted-foreground">
-                Para esta semana
-              </p>
+              <p className="text-xs text-muted-foreground">Para esta semana</p>
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Empresas Geridas</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-card-foreground">
+                Pedidos Pendentes
+              </CardTitle>
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">{accessibleCompanies.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Todas ativas
-              </p>
+              <div className="text-2xl font-bold text-yellow-600">
+                {(adminContext?.pendingRequests || []).length}
+              </div>
+              <p className="text-xs text-muted-foreground">Para aprovação</p>
             </CardContent>
           </Card>
         </div>
@@ -293,6 +342,284 @@ export default function NewDashboardPage() {
 
     return (
       <div className="space-y-6">
+        {/* Seção de Pedidos Pendentes */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              Pedidos Pendentes para Aprovação
+              {(adminContext?.pendingRequests || []).length > 0 && (
+                <Badge variant="destructive">{(adminContext?.pendingRequests || []).length}</Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {adminContext?.isLoadingRequests ? (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground">Carregando pedidos...</p>
+              </div>
+            ) : (adminContext?.pendingRequests || []).length === 0 ? (
+              <div className="text-center py-8">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
+                <p className="text-muted-foreground">Nenhum pedido pendente</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(adminContext?.pendingRequests || []).map((request) => {
+                  
+                  // Acessar propriedades dinamicamente para contornar limitações do TypeScript
+                  const requestData = (request as unknown as Record<string, unknown>);
+                  const userInfo = requestData.user as Record<string, unknown> | undefined;
+                  const requestFormData = requestData.request_data as Record<string, unknown> | undefined;
+                  const submittedAt = requestData.submitted_at as string | undefined;
+                  
+                  // Dados a serem exibidos (priorizar user se existir, senão request_data)
+                  const displayData = {
+                    name: String(userInfo?.name || requestFormData?.name || 'Nome não disponível'),
+                    email: String(userInfo?.email || requestFormData?.email || 'Email não disponível'),
+                    phone: String(userInfo?.phone || requestFormData?.phone || 'Telefone não disponível'),
+                    nif: String(userInfo?.nif || requestFormData?.nif || 'NIF não disponível'),
+                    username: String(requestFormData?.username || ''),
+                    companyName: String(requestFormData?.company_name || ''),
+                    tradeName: String(requestFormData?.trade_name || ''),
+                    nipc: String(requestFormData?.nipc || ''),
+                    legalForm: String(requestFormData?.legal_form || ''),
+                    cae: String(requestFormData?.cae || ''),
+                    shareCapital: String(requestFormData?.share_capital || ''),
+                    address: String(requestFormData?.address || ''),
+                    postalCode: String(requestFormData?.postal_code || ''),
+                    city: String(requestFormData?.city || ''),
+                    country: String(requestFormData?.country || '')
+                  };
+                          
+                          return (
+                  <div key={request.id} className="border rounded-lg space-y-3">
+                    {/* Versão compacta - sempre visível */}
+                    <div 
+                      className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => setExpandedRequest(expandedRequest === request.id ? null : request.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <User className="h-5 w-5 text-muted-foreground" />
+                          <div className="flex items-center gap-3">
+                            <p className="font-medium">{displayData.name}</p>
+                            <Badge variant="outline">
+                              📅 {submittedAt ? new Date(submittedAt).toLocaleDateString('pt-PT') : 'Data não disponível'}
+                            </Badge>
+                          </div>
+                        </div>
+                        {expandedRequest !== request.id && (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 border-green-600 hover:bg-green-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleApproveRequest(request.id, true);
+                              }}
+                              disabled={processingRequest === request.id}
+                            >
+                              {processingRequest === request.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-1"></div>
+                                  Processando...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Aprovar
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 border-red-600 hover:bg-red-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleApproveRequest(request.id, false);
+                              }}
+                              disabled={processingRequest === request.id}
+                            >
+                              {processingRequest === request.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-1"></div>
+                                  Processando...
+                                </>
+                              ) : (
+                                <>
+                                  <X className="h-4 w-4 mr-1" />
+                                  Rejeitar
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Detalhes expandidos - só aparece quando clicado */}
+                    {expandedRequest === request.id && (
+                      <div className="px-4 pb-4 border-t bg-gray-50">
+                        <div className="pt-4 space-y-4">
+                          <h4 className="font-semibold text-lg mb-3">Detalhes do Registro</h4>
+                          
+                          {/* Informações Pessoais */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wide">Informações Pessoais</h5>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <User className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium">Nome:</span> {displayData.name}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Mail className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium">Email:</span> {displayData.email}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Phone className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium">Telefone:</span> {displayData.phone}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium">NIF:</span> {displayData.nif}
+                                </div>
+                                {displayData.username && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <User className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">Username:</span> {displayData.username}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Informações da Empresa */}
+                            <div className="space-y-2">
+                              <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wide">Informações da Empresa</h5>
+                              <div className="space-y-1">
+                                {displayData.companyName && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Building className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">Nome da Empresa:</span> {displayData.companyName}
+                                  </div>
+                                )}
+                                {displayData.tradeName && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Building className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">Nome Comercial:</span> {displayData.tradeName}
+                                  </div>
+                                )}
+                                {displayData.nipc && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <FileText className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">NIPC:</span> {displayData.nipc}
+                                  </div>
+                                )}
+                                {displayData.legalForm && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Shield className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">Forma Legal:</span> {displayData.legalForm}
+                                  </div>
+                                )}
+                                {displayData.cae && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Activity className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">CAE:</span> {displayData.cae}
+                                  </div>
+                                )}
+                                {displayData.shareCapital && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">Capital Social:</span> {displayData.shareCapital}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Morada */}
+                          {(displayData.address || displayData.postalCode || displayData.city) && (
+                            <div className="space-y-2">
+                              <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wide">Morada</h5>
+                              <div className="text-sm">
+                                {displayData.address && <div>{displayData.address}</div>}
+                                <div className="flex gap-2">
+                                  {displayData.postalCode && <span>{displayData.postalCode}</span>}
+                                  {displayData.city && <span>{displayData.city}</span>}
+                                  {displayData.country && <span>{displayData.country}</span>}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Data de submissão */}
+                          <div className="pt-2 border-t">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Calendar className="h-4 w-4" />
+                              <span className="font-medium">Submetido em:</span> 
+                              {submittedAt ? new Date(submittedAt).toLocaleDateString('pt-PT', {
+                                year: 'numeric',
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              }) : 'Data não disponível'}
+                            </div>
+                          </div>
+
+                          {/* Botões de ação na versão expandida */}
+                          <div className="flex gap-3 pt-4 border-t">
+                            <Button
+                              variant="outline"
+                              className="text-green-600 border-green-600 hover:bg-green-50 flex-1"
+                              onClick={() => handleApproveRequest(request.id, true)}
+                              disabled={processingRequest === request.id}
+                            >
+                              {processingRequest === request.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2"></div>
+                                  Processando...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="h-5 w-5 mr-2" />
+                                  Aprovar Pedido
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="text-red-600 border-red-600 hover:bg-red-50 flex-1"
+                              onClick={() => handleApproveRequest(request.id, false)}
+                              disabled={processingRequest === request.id}
+                            >
+                              {processingRequest === request.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                                  Processando...
+                                </>
+                              ) : (
+                                <>
+                                  <X className="h-5 w-5 mr-2" />
+                                  Rejeitar Pedido
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>

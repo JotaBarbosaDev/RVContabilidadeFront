@@ -47,7 +47,9 @@ function App() {
             path="/dashboard" 
             element={
               <ProtectedRoute>
-                <NewDashboardPage />
+                <AdminProvider>
+                  <NewDashboardPage />
+                </AdminProvider>
               </ProtectedRoute>
             } 
           />
@@ -55,7 +57,9 @@ function App() {
             path="/dashboard-old" 
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <AdminProvider>
+                  <DashboardPage />
+                </AdminProvider>
               </ProtectedRoute>
             } 
           />

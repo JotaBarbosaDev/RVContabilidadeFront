@@ -122,10 +122,16 @@ export const AdminProvider = ({ children }: AdminProviderProps) => {
   const [requestFilters, setRequestFilters] = useState({});
   const [userFilters, setUserFilters] = useState({});
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('authToken');
+    console.log('AdminContext: Token from localStorage:', token ? 'Token exists' : 'No token found');
+    
+    if (!token) {
+      console.warn('AdminContext: No auth token found in localStorage');
+    }
+    
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -133,20 +139,32 @@ export const AdminProvider = ({ children }: AdminProviderProps) => {
   };
 
   const fetchPendingRequests = async () => {
+    console.log('AdminContext: fetchPendingRequests called');
     setIsLoadingRequests(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/pending-requests`, {
-        headers: getAuthHeaders()
+      const url = `${API_BASE_URL}/admin/pending-requests`;
+      const headers = getAuthHeaders();
+      console.log('AdminContext: Making request to:', url);
+      console.log('AdminContext: Headers:', headers);
+      
+      const response = await fetch(url, {
+        headers
       });
       
+      console.log('AdminContext: Response status:', response.status);
+      console.log('AdminContext: Response ok:', response.ok);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch pending requests');
+        const errorText = await response.text();
+        console.error('AdminContext: Error response:', errorText);
+        throw new Error(`Failed to fetch pending requests: ${response.status} ${errorText}`);
       }
       
       const data = await response.json();
-      setPendingRequests(data);
+      console.log('AdminContext: Received data:', data);
+      setPendingRequests(Array.isArray(data) ? data : data.data || []);
     } catch (error) {
-      console.error('Error fetching pending requests:', error);
+      console.error('AdminContext: Error fetching pending requests:', error);
       throw error;
     } finally {
       setIsLoadingRequests(false);

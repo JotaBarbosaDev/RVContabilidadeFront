@@ -246,43 +246,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (formData: RegisterFormData): Promise<{ message: string; requestId?: string }> => {
     try {
-      // Mapear dados do frontend para o formato esperado pelo backend DTO
+      console.log('=== DEBUG: Form data received ===');
+      console.log('formData.name:', formData.name);
+      console.log('formData.postalCode:', formData.postalCode);
+      console.log('formData.nif:', formData.nif);
+      console.log('formData.email:', formData.email);
+      
+      // Criar username baseado no nome da empresa (sem espaços e caracteres especiais)
+      const username = formData.name ? 
+        formData.name.toLowerCase().replace(/[^a-z0-9]/g, '.').replace(/\.+/g, '.').replace(/^\.+|\.+$/g, '') :
+        formData.email?.split('@')[0] || 'user';
+
+      // Mapear dados do frontend para o formato correto esperado pelo backend (snake_case)
       const registrationData = {
-        // Campos obrigatórios do RegistrationRequestDTO
-        Username: formData.email, // Usar email como username
-        Password: "temp123", // Password temporário - será alterado no primeiro login
-        CompanyName: formData.name,
-        NIPC: formData.nif,
-        PostalCode: formData.postalCode || "", // Campo obrigatório
-        
-        // Campos adicionais
-        Email: formData.email,
-        Phone: formData.phone,
-        Type: formData.type,
-        Address: formData.address || "",
-        City: formData.city || "",
+        // Campos obrigatórios
+        username: username,
+        name: formData.name || "",
+        email: formData.email || "",
+        phone: formData.phone || "",
+        nif: formData.nif || "",
+        password: "temp123", // Password temporário
+        company_name: formData.name || "",
+        trade_name: formData.name || "",
+        nipc: formData.nif || "",
+        address: formData.address || "",
+        postal_code: formData.postalCode || "",
+        city: formData.city || "",
+        country: "Portugal", // Valor padrão
+        cae: "00000", // Código de atividade econômica padrão
+        legal_form: "Empresário em Nome Individual", // Forma jurídica padrão
+        share_capital: 0.00,
+        registration_date: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
         
         // Campos específicos para novos clientes
         ...(formData.type === 'new-client' && {
-          BusinessType: formData.businessType || "",
-          BusinessTypeOther: formData.businessTypeOther || "",
-          AccountingRegime: formData.accountingRegime || "",
-          EstimatedRevenue: formData.estimatedRevenue || "",
-          MonthlyDocuments: formData.monthlyDocuments || "",
-          DocumentDelivery: formData.documentDelivery || "",
-          InvoicingTool: formData.invoicingTool || "",
-          HasActivity: formData.hasActivity || "",
-          HasSocialSecurity: formData.hasSocialSecurity || "",
-          HasEmployees: formData.hasEmployees || "",
-          HasDebts: formData.hasDebts || "",
-          Observations: formData.observations || ""
+          business_type: formData.businessType || "",
+          business_type_other: formData.businessTypeOther || "",
+          accounting_regime: formData.accountingRegime || "",
+          estimated_revenue: formData.estimatedRevenue || "",
+          monthly_documents: formData.monthlyDocuments || "",
+          document_delivery: formData.documentDelivery || "",
+          invoicing_tool: formData.invoicingTool || "",
+          has_activity: formData.hasActivity || "",
+          has_social_security: formData.hasSocialSecurity || "",
+          has_employees: formData.hasEmployees || "",
+          has_debts: formData.hasDebts || "",
+          observations: formData.observations || ""
         }),
         
         // Campos específicos para clientes existentes
         ...(formData.type === 'existing-client' && {
-          AccessType: formData.accessType || ""
+          access_type: formData.accessType || ""
         })
       };
+
+      console.log('=== DEBUG: Mapped registration data ===');
+      console.log('company_name:', `"${registrationData.company_name}"`);
+      console.log('postal_code:', `"${registrationData.postal_code}"`);
+      console.log('name:', `"${registrationData.name}"`);
+      console.log('username:', `"${registrationData.username}"`);
+      console.log('Full object:', registrationData);
 
       console.log('Sending registration data to backend:', registrationData);
 

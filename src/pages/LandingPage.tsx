@@ -106,7 +106,7 @@ export default function LandingPage() {
                         <TrendingUp className="h-5 w-5 text-accounting-success" />
                       </div>
                       <div>
-                        <div className="font-semibold">Receita Mensal</div>
+                        <div className="font-semibold">Receita Mensal2</div>
                         <div className="text-sm text-muted-foreground">Dezembro 2024</div>
                       </div>
                     </div>
