@@ -113,7 +113,10 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="hover:bg-accent">
+              <DropdownMenuItem 
+                className="hover:bg-accent cursor-pointer" 
+                onClick={() => navigate('/profile')}
+              >
                 <BadgeCheck className="text-accounting-success" />
                 Perfil
               </DropdownMenuItem>

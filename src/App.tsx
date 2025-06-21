@@ -6,6 +6,8 @@ import TokenExpiryNotification from './components/TokenExpiryNotification';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ReactiveRegisterPage from './pages/ReactiveRegisterPage';
+import ExtendedRegisterPage from './pages/ExtendedRegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import NewDashboardPage from './pages/NewDashboardPage';
 import ClientProfilePage from './pages/ClientProfilePage';
@@ -32,9 +34,29 @@ function App() {
             } 
           />
           
-          {/* Rota de registo - público */}
+          {/* Rota de registo expandido - público */}
+          <Route 
+            path="/register-extended" 
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <ExtendedRegisterPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Rota de registo reativo - público */}
           <Route 
             path="/register" 
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <ReactiveRegisterPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Rota de registo antigo - público */}
+          <Route 
+            path="/register-old" 
             element={
               <ProtectedRoute requireAuth={false}>
                 <RegisterPage />

@@ -217,25 +217,38 @@ export const AdminProvider = ({ children }: AdminProviderProps) => {
 
   const approveRequest = async (id: string, approved: boolean, notes?: string) => {
     try {
+      const requestBody = {
+        request_id: Number(id), // ← Convertendo para número como esperado pelo backend
+        status: approved ? 'approved' : 'rejected', // ← Usando o formato correto
+        review_notes: notes || '' // ← Usando o nome correto do campo
+      };
+
+      console.log('AdminContext: Enviando requisição de aprovação:', requestBody);
+      console.log('AdminContext: ID original (string):', id, 'ID convertido (number):', Number(id));
+
       const response = await fetch(`${API_BASE_URL}/admin/approve-request`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({
-          requestId: id,
-          approved,
-          notes
-        })
+        body: JSON.stringify(requestBody)
       });
       
+      console.log('AdminContext: Response status:', response.status);
+      console.log('AdminContext: Response ok:', response.ok);
+
       if (!response.ok) {
-        throw new Error('Failed to process request');
+        const errorText = await response.text();
+        console.log('AdminContext: Error response:', errorText);
+        throw new Error(`Erro ${response.status}: ${errorText || 'Failed to process request'}`);
       }
+
+      const result = await response.json();
+      console.log('AdminContext: Success response:', result);
       
       // Refresh pending requests
       await fetchPendingRequests();
       await fetchAllRequests();
     } catch (error) {
-      console.error('Error processing request:', error);
+      console.error('AdminContext: Error processing request:', error);
       throw error;
     }
   };

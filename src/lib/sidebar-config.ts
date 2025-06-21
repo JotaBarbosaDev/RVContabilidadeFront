@@ -205,7 +205,7 @@ export const accountantSidebarConfig: SidebarConfig = {
       items: [
         {
           title: "Gestão de Clientes",
-          url: "#",
+          url: "/accountant/clients",
         },
         {
           title: "Documentos",

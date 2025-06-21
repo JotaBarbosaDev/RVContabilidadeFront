@@ -43,7 +43,9 @@ interface AuthContextType {
 }
 
 interface RegisterFormData {
-  type: 'existing-client' | 'new-client';
+  type?: 'existing-client' | 'new-client';
+  username?: string;
+  password?: string;
   name: string;
   nif: string;
   email: string;
@@ -248,14 +250,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('=== DEBUG: Form data received ===');
       console.log('formData.name:', formData.name);
-      console.log('formData.postalCode:', formData.postalCode);
+      console.log('formData.username:', formData.username);
       console.log('formData.nif:', formData.nif);
       console.log('formData.email:', formData.email);
       
-      // Criar username baseado no nome da empresa (sem espaços e caracteres especiais)
-      const username = formData.name ? 
-        formData.name.toLowerCase().replace(/[^a-z0-9]/g, '.').replace(/\.+/g, '.').replace(/^\.+|\.+$/g, '') :
-        formData.email?.split('@')[0] || 'user';
+      // Usar o username fornecido pelo usuário ou gerar um se não fornecido
+      let username = formData.username;
+      
+      if (!username) {
+        // Gerar username baseado no nome da empresa com timestamp apenas se não foi fornecido
+        const baseUsername = formData.name ? 
+          formData.name.toLowerCase().replace(/[^a-z0-9]/g, '.').replace(/\.+/g, '.').replace(/^\.+|\.+$/g, '') :
+          formData.email?.split('@')[0] || 'user';
+        
+        // Adicionar timestamp para garantir unicidade
+        const timestamp = Date.now().toString().slice(-6); // Últimos 6 dígitos do timestamp
+        username = `${baseUsername}.${timestamp}`;
+      }
+
+      console.log('=== Username que será enviado ===');
+      console.log('username:', username);
 
       // Mapear dados do frontend para o formato correto esperado pelo backend (snake_case)
       const registrationData = {
@@ -265,7 +279,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: formData.email || "",
         phone: formData.phone || "",
         nif: formData.nif || "",
-        password: "temp123", // Password temporário
+        password: formData.password || "temp123", // Usar a senha fornecida ou temporária
         company_name: formData.name || "",
         trade_name: formData.name || "",
         nipc: formData.nif || "",

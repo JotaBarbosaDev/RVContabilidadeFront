@@ -83,7 +83,7 @@ export default function LoginPage() {
                 <Input
                   id="username"
                   type="text"
-                  placeholder="Seu utilizaodr"
+                  placeholder="Seu utilizador"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -139,8 +139,8 @@ export default function LoginPage() {
         <div className="text-center mt-8">
           <p className="text-sm text-muted-foreground">
             Não tem conta?{" "}
-            <Link to="/register" className="text-accounting-primary hover:text-accounting-primary/80 font-medium transition-colors">
-              Solicite acesso
+            <Link to="/register-extended" className="text-accounting-primary hover:text-accounting-primary/80 font-medium transition-colors">
+              Registar a minha empresa
             </Link>
           </p>
         </div>
