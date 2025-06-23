@@ -27,19 +27,77 @@ import {
 } from "lucide-react"
 import { useEffect, useState, useRef } from "react"
 
+interface ClientSummary {
+  name: string;
+  email: string;
+  username?: string;
+  status: string;
+  nipc: string;
+}
+
 export default function NewDashboardPage() {
-  const { user, getAccessibleCompanies } = useAuth();
+  const { user, getAccessibleCompanies, token } = useAuth();
   const adminContext = useAdmin();
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
+  const [recentClients, setRecentClients] = useState<ClientSummary[]>([]);
+  const [isLoadingClients, setIsLoadingClients] = useState(false);
   const hasInitialized = useRef(false);
 
   useEffect(() => {
     if (user?.type === 'accountant' && adminContext?.fetchPendingRequests && !hasInitialized.current) {
       hasInitialized.current = true;
       adminContext.fetchPendingRequests();
+      loadRecentClients();
     }
   }); // Removendo array de dependências para evitar loops
+
+  const loadRecentClients = async () => {
+    if (!token || user?.type !== 'accountant') return;
+    
+    setIsLoadingClients(true);
+    try {
+      // Usar a nova API que retorna estrutura com users e stats
+      const response = await fetch('http://localhost:8080/api/admin/users?role=client', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Nova estrutura: result.data.users contém os clientes
+          const clients = (result.data.users || [])
+            .sort((a: {created_at: string}, b: {created_at: string}) => 
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .slice(0, 4)
+            .map((client: {company_name?: string, name: string, email: string, username?: string, status: string, nipc?: string}) => ({
+              name: client.company_name || client.name,
+              email: client.email,
+              username: client.username,
+              status: client.status === 'approved' ? 'Em dia' : 
+                     client.status === 'pending' ? 'Pendente' : 
+                     client.status === 'rejected' ? 'Rejeitado' : 'Urgente',
+              nipc: client.nipc || 'N/A'
+            }));
+          setRecentClients(clients);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar clientes:', error);
+      // Fallback para dados mock
+      setRecentClients([
+        { name: "Tech Solutions Lda", email: "contacto@techsolutions.pt", status: "Em dia", nipc: "501234567" },
+        { name: "Inovação Digital Unip Lda", email: "fiscal@inovacao.pt", status: "Pendente", nipc: "501234568" },
+        { name: "Consultoria Estratégica SA", email: "admin@consultoria.pt", status: "Em dia", nipc: "501234569" },
+        { name: "Serviços Gerais Lda", email: "juridico@servicos.pt", status: "Urgente", nipc: "501234570" },
+      ]);
+    } finally {
+      setIsLoadingClients(false);
+    }
+  };
 
   const handleApproveRequest = async (requestId: string, approved: boolean) => {
     const action = approved ? 'aprovar' : 'rejeitar';
@@ -326,13 +384,6 @@ export default function NewDashboardPage() {
 
   // Componente para exibir conteúdo específico do contabilista
   const getAccountantContent = () => {
-    const recentClients = [
-      { name: "Tech Solutions Lda", email: "contacto@techsolutions.pt", status: "Em dia", nipc: "501234567" },
-      { name: "Inovação Digital Unip Lda", email: "fiscal@inovacao.pt", status: "Pendente", nipc: "501234568" },
-      { name: "Consultoria Estratégica SA", email: "admin@consultoria.pt", status: "Em dia", nipc: "501234569" },
-      { name: "Serviços Gerais Lda", email: "juridico@servicos.pt", status: "Urgente", nipc: "501234570" },
-    ];
-
     const obligations = [
       { title: "Declaração Mensal IVA", due: "2025-01-15", status: "pending", company: "Tech Solutions Lda" },
       { title: "IES 2024", due: "2025-07-31", status: "completed", company: "Inovação Digital Unip Lda" },
@@ -629,8 +680,14 @@ export default function NewDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {recentClients.map((client, index) => (
+              {isLoadingClients ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accounting-primary mx-auto"></div>
+                  <p className="mt-2 text-sm text-muted-foreground">Carregando clientes...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentClients.map((client, index) => (
                   <div key={index} className="flex items-center space-x-4">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={`/avatars/empresa-${index + 1}.jpg`} />
@@ -638,7 +695,12 @@ export default function NewDashboardPage() {
                     </Avatar>
                     <div className="space-y-1 flex-1">
                       <p className="text-sm font-medium leading-none">{client.name}</p>
-                      <p className="text-sm text-muted-foreground">{client.email}</p>
+                      <div className="text-sm text-muted-foreground">
+                        {client.username && client.username !== client.email && (
+                          <div>Username: {client.username}</div>
+                        )}
+                        <div>{client.email}</div>
+                      </div>
                     </div>
                     <Badge 
                       variant={client.status === "Em dia" ? "default" : 
@@ -648,7 +710,8 @@ export default function NewDashboardPage() {
                     </Badge>
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

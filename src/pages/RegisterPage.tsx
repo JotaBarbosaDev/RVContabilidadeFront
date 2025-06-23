@@ -30,6 +30,12 @@ export default function RegisterPage() {
     address: '',
     postalCode: '',
     city: '',
+    dateOfBirth: '', // Campo obrigatório adicionado
+    
+    // Morada fiscal (se diferente da principal)
+    fiscalAddress: '',
+    fiscalPostalCode: '',
+    fiscalCity: '',
     
     // Cliente existente
     accessType: '',
@@ -40,7 +46,11 @@ export default function RegisterPage() {
     monthlyDocuments: '',
     documentDelivery: '',
     invoicingTool: '',
-    accountingRegime: '',
+    accountingRegime: 'organizada', // Valor padrão
+    vatRegime: 'isento_art53', // Campo obrigatório adicionado
+    businessActivity: '', // Campo obrigatório adicionado
+    foundingDate: '', // Campo obrigatório adicionado
+    reportFrequency: 'trimestral', // Campo obrigatório adicionado
     
     // Situação atual
     hasActivity: '',
@@ -836,8 +846,16 @@ export default function RegisterPage() {
         address: formData.address,
         postalCode: formData.postalCode,
         city: formData.city,
+        dateOfBirth: formData.dateOfBirth,
+        fiscalAddress: formData.fiscalAddress || formData.address, // Usar endereço principal se não especificado
+        fiscalPostalCode: formData.fiscalPostalCode || formData.postalCode,
+        fiscalCity: formData.fiscalCity || formData.city,
         accessType: formData.accessType,
         accountingRegime: formData.accountingRegime,
+        vatRegime: formData.vatRegime,
+        businessActivity: formData.businessActivity,
+        foundingDate: formData.foundingDate,
+        reportFrequency: formData.reportFrequency,
         estimatedRevenue: formData.estimatedRevenue,
         monthlyDocuments: formData.monthlyDocuments,
         documentDelivery: formData.documentDelivery,

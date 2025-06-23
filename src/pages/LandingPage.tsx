@@ -365,7 +365,7 @@ export default function LandingPage() {
             <Link to="/register-extended">
               <Button size="lg" variant="secondary" className="text-lg px-8 py-4 bg-white text-accounting-primary hover:bg-white/90">
                 <UserCircle className="mr-2 h-5 w-5" />
-                Registar a Minha Empresa
+                Solicitar Acesso
               </Button>
             </Link>
             <Link to="/login">

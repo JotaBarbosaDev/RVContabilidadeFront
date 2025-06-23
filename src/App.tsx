@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AdminProvider } from './contexts/AdminContext';
+import { ToastProvider } from './components/ui/toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import TokenExpiryNotification from './components/TokenExpiryNotification';
 import LandingPage from './pages/LandingPage';
@@ -15,13 +16,15 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminRequestsPage from './pages/AdminRequestsPage';
 import AdminRequestDetailsPage from './pages/AdminRequestDetailsPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import AccountantClientsPage from './pages/AccountantClientsPage';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <TokenExpiryNotification />
-        <Routes>
+    <ToastProvider>
+      <AuthProvider>
+        <Router>
+          <TokenExpiryNotification />
+          <Routes>
           <Route path="/" element={<LandingPage />} />
           
           {/* Rota pública - redireciona para dashboard se já autenticado */}
@@ -94,6 +97,16 @@ function App() {
             } 
           />
           
+          {/* Rota de gestão de clientes para contabilistas */}
+          <Route 
+            path="/accountant/clients" 
+            element={
+              <ProtectedRoute>
+                <AccountantClientsPage />
+              </ProtectedRoute>
+            } 
+          />
+          
           {/* Rotas administrativas - requerem permissões de admin */}
           <Route 
             path="/admin" 
@@ -138,6 +151,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
+    </ToastProvider>
   );
 }
 

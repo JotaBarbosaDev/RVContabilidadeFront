@@ -26,6 +26,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   login: (username: string, password: string) => Promise<void>;
   register: (formData: RegisterFormData) => Promise<{ message: string; requestId?: string }>;
   logout: (callApi?: boolean) => Promise<void>;
@@ -55,8 +56,16 @@ interface RegisterFormData {
   address?: string;
   postalCode?: string;
   city?: string;
+  dateOfBirth?: string; // Campo obrigatório adicionado
+  fiscalAddress?: string; // Campo obrigatório adicionado
+  fiscalPostalCode?: string; // Campo obrigatório adicionado
+  fiscalCity?: string; // Campo obrigatório adicionado
   accessType?: string;
   accountingRegime?: string;
+  vatRegime?: string; // Campo obrigatório adicionado
+  businessActivity?: string; // Campo obrigatório adicionado
+  foundingDate?: string; // Campo obrigatório adicionado
+  reportFrequency?: string; // Campo obrigatório adicionado
   estimatedRevenue?: string;
   monthlyDocuments?: string;
   documentDelivery?: string;
@@ -283,22 +292,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         company_name: formData.name || "",
         trade_name: formData.name || "",
         nipc: formData.nif || "",
+        
+        // Campos de endereço obrigatórios
         address: formData.address || "",
         postal_code: formData.postalCode || "",
         city: formData.city || "",
+        
+        // Campos de morada fiscal obrigatórios
+        fiscal_address: formData.fiscalAddress || formData.address || "",
+        fiscal_postal_code: formData.fiscalPostalCode || formData.postalCode || "",
+        fiscal_city: formData.fiscalCity || formData.city || "",
+        
         country: "Portugal", // Valor padrão
         cae: "00000", // Código de atividade econômica padrão
         legal_form: "Empresário em Nome Individual", // Forma jurídica padrão
         share_capital: 0.00,
+        
+        // Data de nascimento obrigatória
+        date_of_birth: formData.dateOfBirth || "1990-01-01", // Usar data fornecida ou padrão
+        
+        // Data de constituição obrigatória
+        founding_date: formData.foundingDate || new Date().toISOString().split('T')[0],
+        
+        // Campos de regime obrigatórios
+        accounting_regime: formData.accountingRegime || "organizada",
+        vat_regime: formData.vatRegime || "isento_art53",
+        
+        // Atividade empresarial obrigatória
+        business_activity: formData.businessActivity || formData.businessType || "Atividade não especificada",
+        
+        // Número de faturas mensais obrigatório
+        monthly_invoices: formData.monthlyDocuments ? parseInt(formData.monthlyDocuments) || 1 : 1,
+        
+        // Frequência de relatórios obrigatória
+        report_frequency: formData.reportFrequency || "trimestral",
+        
         registration_date: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
         
         // Campos específicos para novos clientes
         ...(formData.type === 'new-client' && {
           business_type: formData.businessType || "",
           business_type_other: formData.businessTypeOther || "",
-          accounting_regime: formData.accountingRegime || "",
           estimated_revenue: formData.estimatedRevenue || "",
-          monthly_documents: formData.monthlyDocuments || "",
           document_delivery: formData.documentDelivery || "",
           invoicing_tool: formData.invoicingTool || "",
           has_activity: formData.hasActivity || "",
@@ -419,9 +454,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return user?.type === 'accountant' || user?.type === 'admin';
   };
 
+  const getToken = (): string | null => {
+    return localStorage.getItem('authToken');
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
+      token: getToken(),
       login, 
       logout, 
       register,

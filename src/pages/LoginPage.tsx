@@ -140,7 +140,7 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground">
             Não tem conta?{" "}
             <Link to="/register-extended" className="text-accounting-primary hover:text-accounting-primary/80 font-medium transition-colors">
-              Registar a minha empresa
+              Solicitar Acesso
             </Link>
           </p>
         </div>

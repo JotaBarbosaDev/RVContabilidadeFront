@@ -460,3 +460,36 @@ export const validateNumberReactive = (value: string, fieldName: string, min: nu
   
   return { isValid: true, hint: `${fieldName} válido` };
 };
+
+// Generic field validation function for useValidation hook
+export const validateField = (
+  fieldName: string, 
+  value: string, 
+  schema: z.ZodSchema<Record<string, unknown>>
+): { isValid: boolean; error?: string } => {
+  try {
+    // Create a partial object with just this field
+    const fieldData = { [fieldName]: value };
+    
+    // Try to validate the whole object (Zod will report errors for individual fields)
+    schema.parse(fieldData);
+    
+    return { isValid: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const fieldError = error.errors.find(err => 
+        err.path.length > 0 && err.path[0] === fieldName
+      );
+      
+      return {
+        isValid: false,
+        error: fieldError?.message || 'Valor inválido'
+      };
+    }
+    
+    return {
+      isValid: false,
+      error: 'Erro de validação'
+    };
+  }
+};

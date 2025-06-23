@@ -2,11 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { z } from 'zod';
 import { validateField } from '@/lib/validations';
 
-interface UseValidationOptions {
-  sc    return Object.keys(fields).reduce((acc, key) => {
-      (acc as Record<string, unknown>)[key] = fields[key as keyof T].value;
-      return acc;
-    }, {} as T);: z.ZodSchema;
+interface UseValidationOptions<T> {
+  schema: z.ZodSchema<T>;
   debounceMs?: number;
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
@@ -22,7 +19,7 @@ interface FieldState {
 
 export const useValidation = <T extends Record<string, unknown>>(
   initialValues: T,
-  options: UseValidationOptions
+  options: UseValidationOptions<T>
 ) => {
   const { schema, debounceMs = 300, validateOnChange = true, validateOnBlur = true } = options;
   
@@ -32,7 +29,7 @@ export const useValidation = <T extends Record<string, unknown>>(
     
     Object.keys(initialValues).forEach((key) => {
       initialState[key as keyof T] = {
-        value: initialValues[key] as string || '',
+        value: (initialValues[key] as string) || '',
         isValid: false,
         isValidating: false,
         isTouched: false,
@@ -133,9 +130,9 @@ export const useValidation = <T extends Record<string, unknown>>(
   // Validar todos os campos
   const validateAll = useCallback((): boolean => {
     const values = Object.keys(fields).reduce((acc, key) => {
-      acc[key] = fields[key as keyof T].value;
+      (acc as Record<string, unknown>)[key] = fields[key as keyof T].value;
       return acc;
-    }, {} as any);
+    }, {} as T);
     
     try {
       schema.parse(values);
@@ -184,11 +181,11 @@ export const useValidation = <T extends Record<string, unknown>>(
     const resetValues = { ...initialValues, ...newValues };
     
     setFields(() => {
-      const resetState: Record<keyof T, FieldState> = {} as any;
+      const resetState: Record<keyof T, FieldState> = {} as Record<keyof T, FieldState>;
       
       Object.keys(resetValues).forEach((key) => {
         resetState[key as keyof T] = {
-          value: resetValues[key] || '',
+          value: (resetValues[key as keyof T] as string) || '',
           isValid: false,
           isValidating: false,
           isTouched: false,
