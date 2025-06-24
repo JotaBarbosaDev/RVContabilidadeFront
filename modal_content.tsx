@@ -1,4 +1,87 @@
-                  
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './src/components/ui/card';
+import { Input } from './src/components/ui/input';
+import { Textarea } from './src/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './src/components/ui/select';
+import { User, MapPin, Building, FileText, CreditCard, Lock } from 'lucide-react';
+
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  nif: string;
+  date_of_birth?: string;
+  fiscal_address?: string;
+  address?: string;
+  fiscal_postal_code?: string;
+  postal_code?: string;
+  fiscal_city?: string;
+  city?: string;
+  has_company?: boolean;
+  company_name?: string;
+  nipc?: string;
+  cae?: string;
+  legal_form?: string;
+  founding_date?: string;
+  business_activity?: string;
+  estimated_revenue?: number;
+  monthly_invoices?: number;
+  number_employees?: number;
+  accounting_regime?: string;
+  vat_regime?: string;
+  report_frequency?: string;
+  username?: string;
+  status: 'approved' | 'pending' | 'rejected' | 'blocked';
+}
+
+interface ProfileFormData {
+  name: string;
+  email: string;
+  phone: string;
+  nif: string;
+  date_of_birth?: string;
+  fiscal_address?: string;
+  address?: string;
+  fiscal_postal_code?: string;
+  postal_code?: string;
+  fiscal_city?: string;
+  city?: string;
+  company_name?: string;
+  nipc?: string;
+  cae?: string;
+  legal_form?: string;
+  founding_date?: string;
+  business_activity?: string;
+  estimated_revenue?: number;
+  monthly_invoices?: number;
+  number_employees?: number;
+  accounting_regime?: string;
+  vat_regime?: string;
+  report_frequency?: string;
+  username?: string;
+  new_password?: string;
+  confirm_password?: string;
+  status: 'approved' | 'pending' | 'rejected' | 'blocked';
+}
+
+interface ModalContentProps {
+  selectedClient: Client;
+  isEditMode: boolean;
+  profileFormData: ProfileFormData;
+  setProfileFormData: (value: ProfileFormData | ((prev: ProfileFormData) => ProfileFormData)) => void;
+  getStatusBadge: (status: string) => React.ReactNode;
+}
+
+export function ModalContent({ 
+  selectedClient, 
+  isEditMode, 
+  profileFormData, 
+  setProfileFormData, 
+  getStatusBadge 
+}: ModalContentProps) {
+  return (
+    <>
                   {/* Coluna Esquerda */}
                   <div className="space-y-6">
                     
@@ -463,3 +546,6 @@
                       </CardContent>
                     </Card>
                   </div>
+    </>
+  );
+}

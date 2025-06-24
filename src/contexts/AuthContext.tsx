@@ -49,6 +49,7 @@ interface RegisterFormData {
   password?: string;
   name: string;
   nif: string;
+  nipc?: string; // Campo opcional adicionado
   email: string;
   phone: string;
   businessType?: string;
@@ -277,6 +278,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         username = `${baseUsername}.${timestamp}`;
       }
 
+      console.log('=== Dados de registro sendo enviados ===');
+      console.log('formData completo:', formData);
+      console.log('NIPC fornecido:', formData.nipc);
+      console.log('NIPC será enviado:', !!formData.nipc);
+      
       console.log('=== Username que será enviado ===');
       console.log('username:', username);
 
@@ -291,7 +297,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password: formData.password || "temp123", // Usar a senha fornecida ou temporária
         company_name: formData.name || "",
         trade_name: formData.name || "",
-        nipc: formData.nif || "",
+        ...(formData.nipc && { nipc: formData.nipc }), // NIPC opcional - só enviar se fornecido
         
         // Campos de endereço obrigatórios
         address: formData.address || "",
@@ -348,6 +354,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           access_type: formData.accessType || ""
         })
       };
+      
+      console.log('=== Dados finais para envio ao backend ===');
+      console.log('registrationData:', registrationData);
+      console.log('NIPC no payload:', registrationData.nipc);
+      console.log('NIPC está presente:', 'nipc' in registrationData);
 
       console.log('=== DEBUG: Mapped registration data ===');
       console.log('company_name:', `"${registrationData.company_name}"`);

@@ -60,7 +60,14 @@ module.exports = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
-  			}
+  			},
+  			'accounting-primary': 'hsl(var(--accounting-primary))',
+  			'accounting-secondary': 'hsl(var(--accounting-secondary))',
+  			'accounting-success': 'hsl(var(--accounting-success))',
+  			'accounting-warning': 'hsl(var(--accounting-warning))',
+  			'accounting-error': 'hsl(var(--accounting-error))',
+  			'accounting-neutral': 'hsl(var(--accounting-neutral))',
+  			'accounting-surface': 'hsl(var(--accounting-surface))'
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

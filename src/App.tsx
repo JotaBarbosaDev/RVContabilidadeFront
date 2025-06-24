@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ReactiveRegisterPage from './pages/ReactiveRegisterPage';
 import ExtendedRegisterPage from './pages/ExtendedRegisterPage';
+import CompleteRegisterPage from './pages/CompleteRegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import NewDashboardPage from './pages/NewDashboardPage';
 import ClientProfilePage from './pages/ClientProfilePage';
@@ -43,6 +44,16 @@ function App() {
             element={
               <ProtectedRoute requireAuth={false}>
                 <ExtendedRegisterPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Rota de registo completo - público */}
+          <Route 
+            path="/register-complete" 
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <CompleteRegisterPage />
               </ProtectedRoute>
             } 
           />

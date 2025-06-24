@@ -316,7 +316,6 @@ export default function ExtendedRegisterPage() {
             />
 
             <div>
-              <Label htmlFor="date_of_birth">Data de Nascimento *</Label>
               <ValidatedInput
                 label="Data de Nascimento"
                 type="date"
@@ -333,7 +332,7 @@ export default function ExtendedRegisterPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="fiscal_address">Morada Fiscal *</Label>
+              <Label htmlFor="fiscal_address">Morada Fiscal</Label>
               <Textarea
                 placeholder="Rua da República, 123, 2º Andar"
                 {...register('fiscal_address')}
@@ -361,7 +360,7 @@ export default function ExtendedRegisterPage() {
 
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <Label htmlFor="has_company" className="text-lg font-semibold text-blue-800">
-                Tem empresa ou atividade empresarial? *
+                Tem empresa ou atividade empresarial?
               </Label>
               <p className="text-sm text-blue-600 mb-3">
                 Selecione "Não" se apenas precisa de serviços de IRS particular
@@ -408,7 +407,6 @@ export default function ExtendedRegisterPage() {
               onValidate={(value: string) => validateNIPCReactive(value)}
               {...register('nipc')}
               error={errors.nipc?.message}
-              required
             />
 
             <ValidatedInput
@@ -421,7 +419,7 @@ export default function ExtendedRegisterPage() {
             />
 
             <div>
-              <Label htmlFor="legal_form">Forma Jurídica *</Label>
+              <Label htmlFor="legal_form">Forma Jurídica</Label>
               <select
                 {...register('legal_form')}
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
@@ -451,7 +449,7 @@ export default function ExtendedRegisterPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="business_activity">Descrição da Atividade *</Label>
+              <Label htmlFor="business_activity">Descrição da Atividade</Label>
               <Textarea
                 placeholder="Descreva detalhadamente a atividade principal da empresa..."
                 {...register('business_activity')}
@@ -495,7 +493,7 @@ export default function ExtendedRegisterPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="accounting_regime">Regime de Contabilidade *</Label>
+              <Label htmlFor="accounting_regime">Regime de Contabilidade</Label>
               <select
                 {...register('accounting_regime')}
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
@@ -507,7 +505,7 @@ export default function ExtendedRegisterPage() {
             </div>
 
             <div>
-              <Label htmlFor="vat_regime">Regime de IVA *</Label>
+              <Label htmlFor="vat_regime">Regime de IVA</Label>
               <select
                 {...register('vat_regime')}
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
@@ -520,7 +518,7 @@ export default function ExtendedRegisterPage() {
             </div>
 
             <div>
-              <Label htmlFor="report_frequency">Frequência de Relatórios *</Label>
+              <Label htmlFor="report_frequency">Frequência de Relatórios</Label>
               <select
                 {...register('report_frequency')}
                 className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"

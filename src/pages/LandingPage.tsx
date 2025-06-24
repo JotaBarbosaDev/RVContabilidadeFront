@@ -8,21 +8,38 @@ import {
   FileText,
   TrendingUp,
   CheckCircle,
-  Building,
   Clock,
   Award,
   UserCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { 
+  SplitText, 
+  ShinyText,
+  BlurText,
+  CountUp,
+  FadeInUpNew,
+  ScaleInNew,
+  Magnetic,
+  AnimatedBackground,
+  GradientOrb
+} from "@/components/animations";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accounting-surface/30 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-background relative overflow-hidden">
+      {/* Animated Background */}
+      <AnimatedBackground particleCount={15} />
+      
+      {/* Gradient Orbs */}
+      <GradientOrb size="lg" className="top-10 -left-32" />
+      <GradientOrb size="md" className="top-1/2 -right-24" color="blue" />
+      <GradientOrb size="sm" className="bottom-20 left-1/4" color="green" />
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 bg-accounting-primary rounded-lg flex items-center justify-center">
+            <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <Calculator className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -59,89 +76,114 @@ export default function LandingPage() {
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Award className="h-5 w-5 text-accounting-success" />
-                <span className="text-sm font-medium text-accounting-success">Escritório Digital Certificado</span>
-              </div>
-              <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-                Gestão Contabilística
-                <span className="text-accounting-primary block">Inteligente</span>
-              </h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-lg">
-                Transforme a gestão da sua empresa com o nosso escritório contabilístico digital. 
-                Contabilidade moderna, segura e em conformidade com o SNC e normativo português.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/login">
-                  <Button size="lg" className="bg-accounting-primary hover:bg-accounting-primary/90 text-lg px-8 py-4">
-                    Começar Agora
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-                <Button variant="outline" size="lg" className="text-lg px-8 py-4">
-                  <Users className="mr-2 h-5 w-5" />
-                  Falar com Especialista
-                </Button>
-              </div>
-              <div className="mt-8 grid grid-cols-3 gap-6 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-accounting-primary">500+</div>
-                  <div className="text-sm text-muted-foreground">Empresas atendidas</div>
+              <FadeInUpNew>
+                <div className="flex items-center space-x-2 mb-4">
+                  <Award className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-medium text-green-600">Contabilista Certificada • ROC n.º 1234</span>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-accounting-primary">99.9%</div>
-                  <div className="text-sm text-muted-foreground">Disponibilidade</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-accounting-primary">24h</div>
-                  <div className="text-sm text-muted-foreground">Suporte ativo</div>
+              </FadeInUpNew>
+              
+              <div className="mb-6">
+                <FadeInUpNew>
+                  <h1 className="text-5xl md:text-6xl font-bold text-foreground leading-tight">
+                    Deixe a sua contabilidade em boas mãos
+                  </h1>
+                </FadeInUpNew>
+                <div className="mt-2">
+                  <ShinyText
+                    text="Concentre-se no que realmente importa"
+                    className="text-2xl md:text-3xl font-semibold block text-blue-600"
+                    background="linear-gradient(110deg, #3B82F6 45%, #60A5FA 55%, #3B82F6 65%)"
+                    animationSpeed={2.5}
+                  />
                 </div>
               </div>
+              
+              <FadeInUpNew delay={0.3}>
+                <p className="text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
+                  <strong className="text-foreground">IRS sem complicações.</strong> Empresas organizadas e em dia. 
+                  Atendimento personalizado para particulares e negócios de todos os tamanhos. 
+                  <span className="text-blue-600 font-semibold">A sua tranquilidade fiscal é a nossa prioridade.</span>
+                </p>
+              </FadeInUpNew>
+              <ScaleInNew delay={0.5}>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link to="/register-extended">
+                    <Magnetic intensity={0.2}>
+                      <Button size="lg" className="bg-blue-600 hover:bg-blue-600/90 text-lg px-8 py-4 relative overflow-hidden group">
+                        <span className="relative z-10">Peça o Seu Orçamento Grátis</span>
+                        <ArrowRight className="ml-2 h-5 w-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Button>
+                    </Magnetic>
+                  </Link>
+                  <Magnetic intensity={0.15}>
+                    <Button variant="outline" size="lg" className="text-lg px-8 py-4 hover:bg-blue-600/5 hover:border-blue-600 transition-all duration-300">
+                      <Users className="mr-2 h-5 w-5" />
+                      Falar Diretamente Comigo
+                    </Button>
+                  </Magnetic>
+                </div>
+              </ScaleInNew>
+              <FadeInUpNew delay={0.7}>
+                <div className="mt-8 grid grid-cols-3 gap-6 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      <CountUp to={150} suffix="+" duration={2.5} />
+                    </div>
+                    <div className="text-sm text-muted-foreground">Clientes satisfeitos</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      <CountUp to={15} suffix=" anos" duration={2.5} />
+                    </div>
+                    <div className="text-sm text-muted-foreground">De experiência</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      <CountUp to={100} suffix="%" duration={2.5} />
+                    </div>
+                    <div className="text-sm text-muted-foreground">Prazos cumpridos</div>
+                  </div>
+                </div>
+              </FadeInUpNew>
             </div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-accounting-primary/10 to-accounting-secondary/10 rounded-3xl p-8 backdrop-blur-sm border">
+              <div className="bg-gradient-to-br from-blue-600/10 to-cyan-500/10 rounded-3xl p-8 backdrop-blur-sm border">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-foreground mb-2">O que os meus clientes dizem:</h3>
+                </div>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-background rounded-xl shadow-sm">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 bg-accounting-success/10 rounded-lg flex items-center justify-center">
-                        <TrendingUp className="h-5 w-5 text-accounting-success" />
-                      </div>
-                      <div>
-                        <div className="font-semibold">Receita Mensal2</div>
-                        <div className="text-sm text-muted-foreground">Dezembro 2024</div>
-                      </div>
+                  <div className="flex items-start space-x-3 p-4 bg-background rounded-xl shadow-sm">
+                    <div className="h-10 w-10 bg-green-600/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-bold text-green-600">MJ</span>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold text-accounting-success">€ 85.340</div>
-                      <div className="text-sm text-accounting-success">+12.5%</div>
+                    <div>
+                      <div className="font-semibold text-sm">Maria João Silva</div>
+                      <div className="text-xs text-muted-foreground mb-2">Empresária • Comércio</div>
+                      <p className="text-sm text-muted-foreground">"Finalmente posso dormir descansada. A Rita trata de tudo com um profissionalismo exemplar."</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-background rounded-xl shadow-sm">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 bg-accounting-warning/10 rounded-lg flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-accounting-warning" />
-                      </div>
-                      <div>
-                        <div className="font-semibold">Obrigações</div>
-                        <div className="text-sm text-muted-foreground">Em dia</div>
-                      </div>
+                  
+                  <div className="flex items-start space-x-3 p-4 bg-background rounded-xl shadow-sm">
+                    <div className="h-10 w-10 bg-blue-600/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-bold text-blue-600">PA</span>
                     </div>
-                    <div className="text-right">
-                      <CheckCircle className="h-6 w-6 text-accounting-success ml-auto" />
+                    <div>
+                      <div className="font-semibold text-sm">Paulo Andrade</div>
+                      <div className="text-xs text-muted-foreground mb-2">Particular • IRS</div>
+                      <p className="text-sm text-muted-foreground">"IRS entregue em 2 dias! Nunca foi tão fácil. Recomendo a toda a gente."</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-background rounded-xl shadow-sm">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 bg-accounting-secondary/10 rounded-lg flex items-center justify-center">
-                        <Building className="h-5 w-5 text-accounting-secondary" />
-                      </div>
-                      <div>
-                        <div className="font-semibold">Empresas Ativas</div>
-                        <div className="text-sm text-muted-foreground">Total gerenciadas</div>
-                      </div>
+                  
+                  <div className="flex items-start space-x-3 p-4 bg-background rounded-xl shadow-sm">
+                    <div className="h-10 w-10 bg-cyan-600/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-bold text-cyan-600">AC</span>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold">127</div>
+                    <div>
+                      <div className="font-semibold text-sm">Ana Costa</div>
+                      <div className="text-xs text-muted-foreground mb-2">Freelancer • Recibos Verdes</div>
+                      <p className="text-sm text-muted-foreground">"Apoio constante e preços justos. A melhor decisão que tomei para o meu negócio."</p>
                     </div>
                   </div>
                 </div>
@@ -155,172 +197,229 @@ export default function LandingPage() {
       <section id="solucoes" className="py-20 px-4 bg-background">
         <div className="container mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Soluções Completas para a Sua Empresa
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Do empresário em nome individual às grandes empresas, oferecemos serviços contabilísticos especializados
-            </p>
+            <SplitText
+              text="Tudo o que precisa para estar tranquilo"
+              className="text-3xl md:text-4xl font-bold text-foreground mb-4"
+              delay={80}
+              splitType="words"
+            />
+            <FadeInUpNew delay={0.3}>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Seja particular ou empresário, tenho a solução certa para si. 
+                <strong className="text-foreground">Sem complicações, sem stress.</strong>
+              </p>
+            </FadeInUpNew>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 bg-accounting-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <Calculator className="h-6 w-6 text-accounting-primary" />
-                </div>
-                <CardTitle>Contabilidade Digital</CardTitle>
-                <CardDescription>
-                  Escrituração completa, balancetes, demonstrações de resultados e todas as obrigações acessórias em ambiente 100% digital
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <ScaleInNew delay={0.1}>
+              <Magnetic intensity={0.1}>
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <CardHeader className="relative z-10">
+                    <div className="w-12 h-12 bg-blue-600/10 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <Calculator className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <CardTitle>IRS Sem Complicações</CardTitle>
+                    <CardDescription>
+                      <strong>Entregue o seu IRS em 48h.</strong> Máximo reembolso garantido. 
+                      Atendimento personalizado e preços transparentes. Deixe tudo comigo!
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </Magnetic>
+            </ScaleInNew>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 bg-accounting-success/10 rounded-lg flex items-center justify-center mb-4">
-                  <FileText className="h-6 w-6 text-accounting-success" />
-                </div>
-                <CardTitle>Compliance Fiscal</CardTitle>
-                <CardDescription>
-                  Gestão completa de obrigações fiscais, IES, declarações periódicas de IVA, IRC e acompanhamento automático de prazos da AT
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <ScaleInNew delay={0.2}>
+              <Magnetic intensity={0.1}>
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <CardHeader className="relative z-10">
+                    <div className="w-12 h-12 bg-green-600/10 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <FileText className="h-6 w-6 text-green-600" />
+                    </div>
+                    <CardTitle>Empresas Sempre em Dia</CardTitle>
+                    <CardDescription>
+                      <strong>Zero multas, zero stress.</strong> IVA, IRC, declarações anuais - tudo tratado nos prazos. 
+                      Acompanhamento mensal incluído. A sua empresa segura e organizada.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </Magnetic>
+            </ScaleInNew>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 bg-accounting-secondary/10 rounded-lg flex items-center justify-center mb-4">
-                  <TrendingUp className="h-6 w-6 text-accounting-secondary" />
-                </div>
-                <CardTitle>Consultoria Estratégica</CardTitle>
-                <CardDescription>
-                  Análise de gestão, planeamento fiscal e orientação para crescimento sustentável do negócio
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <ScaleInNew delay={0.3}>
+              <Magnetic intensity={0.1}>
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <CardHeader className="relative z-10">
+                    <div className="w-12 h-12 bg-cyan-600/10 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <TrendingUp className="h-6 w-6 text-cyan-600" />
+                    </div>
+                    <CardTitle>Recibos Verdes Simplificados</CardTitle>
+                    <CardDescription>
+                      <strong>Freelancer ou prestador de serviços?</strong> Categoria certa, pagamentos organizados, 
+                      IVA sem dores de cabeça. Foque-se no seu trabalho, eu trato do resto.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </Magnetic>
+            </ScaleInNew>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 bg-accounting-warning/10 rounded-lg flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-accounting-warning" />
-                </div>
-                <CardTitle>Gestão de Pessoal</CardTitle>
-                <CardDescription>
-                  Processamento salarial, Segurança Social, subsídios e todo o departamento de recursos humanos da sua empresa
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <ScaleInNew delay={0.4}>
+              <Magnetic intensity={0.1}>
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <CardHeader className="relative z-10">
+                    <div className="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <Users className="h-6 w-6 text-amber-500" />
+                    </div>
+                    <CardTitle>Contabilidade Organizada</CardTitle>
+                    <CardDescription>
+                      <strong>A sua empresa merece crescer.</strong> Relatórios claros, análise de custos, 
+                      conselhos práticos para aumentar lucros. Contabilidade que faz a diferença.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </Magnetic>
+            </ScaleInNew>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <Shield className="h-6 w-6 text-purple-600" />
-                </div>
-                <CardTitle>Constituição de Empresas</CardTitle>
-                <CardDescription>
-                  Processo completo de constituição empresarial, desde o NIPC até a primeira declaração
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <ScaleInNew delay={0.5}>
+              <Magnetic intensity={0.1}>
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <CardHeader className="relative z-10">
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <Shield className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <CardTitle>Apoio na Criação de Empresa</CardTitle>
+                    <CardDescription>
+                      <strong>Sonha ser patrão?</strong> Ajudo-o a criar a sua empresa do zero. 
+                      Escolha da forma jurídica, registo, primeiras obrigações. Comece bem!
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </Magnetic>
+            </ScaleInNew>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-4">
-                  <Clock className="h-6 w-6 text-pink-600" />
-                </div>
-                <CardTitle>Suporte 24/7</CardTitle>
-                <CardDescription>
-                  Atendimento especializado quando você precisar, com equipe dedicada ao seu sucesso
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <ScaleInNew delay={0.6}>
+              <Magnetic intensity={0.1}>
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <CardHeader className="relative z-10">
+                    <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <Clock className="h-6 w-6 text-pink-600" />
+                    </div>
+                    <CardTitle>Sempre Disponível Para Si</CardTitle>
+                    <CardDescription>
+                      <strong>Tem uma dúvida urgente?</strong> Contacte-me por telefone, email ou WhatsApp. 
+                      Resposta rápida e atendimento humanizado. Está em boas mãos.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </Magnetic>
+            </ScaleInNew>
           </div>
         </div>
       </section>
 
       {/* Differentials Section */}
-      <section id="diferenciais" className="py-20 px-4 bg-accounting-surface/30">
+      <section id="diferenciais" className="py-20 px-4 bg-blue-50/30">
         <div className="container mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Porquê escolher a RV Contabilidade?
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Tecnologia de ponta aliada à experiência de profissionais especializados
-            </p>
+            <BlurText
+              text="Porque é que me deve escolher?"
+              className="text-3xl md:text-4xl font-bold text-foreground mb-4"
+              delay={100}
+              animateBy="words"
+            />
+            <FadeInUpNew delay={0.5}>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                <strong className="text-foreground">Rita Vieira, Contabilista Certificada.</strong> 
+                Mais de 15 anos a ajudar particulares e empresas a estarem sempre em dia com o fisco.
+              </p>
+            </FadeInUpNew>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-accounting-success/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                  <CheckCircle className="h-5 w-5 text-accounting-success" />
+                <div className="w-8 h-8 bg-green-600/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Plataforma Integrada</h3>
+                  <h3 className="font-semibold text-lg mb-2">Atendimento 100% Personalizado</h3>
                   <p className="text-muted-foreground">
-                    Tudo num só local: contabilidade, fiscal, pessoal e gestão em ambiente seguro e acessível
+                    <strong>Conheço todos os meus clientes pelo nome.</strong> Não é mais um número numa empresa gigante. 
+                    Aqui tem atenção dedicada e soluções à medida das suas necessidades.
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-accounting-primary/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                  <CheckCircle className="h-5 w-5 text-accounting-primary" />
+                <div className="w-8 h-8 bg-blue-600/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <CheckCircle className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Automatização Inteligente</h3>
+                  <h3 className="font-semibold text-lg mb-2">Preços Justos e Transparentes</h3>
                   <p className="text-muted-foreground">
-                    Processos automatizados que reduzem erros e aceleram a entrega de obrigações e relatórios
+                    <strong>Sem surpresas na fatura.</strong> Orçamento gratuito e preços fixos acordados antecipadamente. 
+                    Qualidade profissional sem pagar de mais.
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-accounting-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                  <CheckCircle className="h-5 w-5 text-accounting-secondary" />
+                <div className="w-8 h-8 bg-cyan-600/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <CheckCircle className="h-5 w-5 text-cyan-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Segurança Certificada</h3>
+                  <h3 className="font-semibold text-lg mb-2">Experiência e Confiança</h3>
                   <p className="text-muted-foreground">
-                    Certificação digital, backup em nuvem e proteção total dos seus dados empresariais
+                    <strong>Mais de 15 anos de experiência.</strong> Centenas de IRS entregues, dezenas de empresas acompanhadas. 
+                    Zero multas dos meus clientes. Os resultados falam por si.
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-accounting-warning/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                  <CheckCircle className="h-5 w-5 text-accounting-warning" />
+                <div className="w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <CheckCircle className="h-5 w-5 text-amber-500" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Equipa Especializada</h3>
+                  <h3 className="font-semibold text-lg mb-2">Rapidez e Eficiência</h3>
                   <p className="text-muted-foreground">
-                    Contabilistas e consultores com certificações actualizadas em constante formação
+                    <strong>IRS em 48h, empresas sempre em dia.</strong> Tecnologia moderna ao serviço da rapidez. 
+                    Não perca tempo nem prazos importantes.
                   </p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-accounting-primary/5 to-accounting-secondary/5 rounded-2xl p-8 border">
+            <div className="bg-gradient-to-br from-blue-600/5 to-cyan-500/5 rounded-2xl p-8 border">
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-4">Transformação Digital</h3>
+                <h3 className="text-2xl font-bold mb-4">Garantias que Ofereço</h3>
                 <p className="text-muted-foreground">
-                  Modernize a sua gestão contabilística e tenha controlo total do seu negócio
+                  <strong>A sua tranquilidade é a minha prioridade.</strong> Por isso ofereço garantias concretas.
                 </p>
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-background rounded-lg">
-                  <span className="font-medium">Redução de Custos</span>
-                  <span className="text-accounting-success font-bold">até 40%</span>
+                  <span className="font-medium">Prazo IRS Particular</span>
+                  <span className="text-green-600 font-bold">48 horas</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-background rounded-lg">
-                  <span className="font-medium">Tempo de Processamento</span>
-                  <span className="text-accounting-primary font-bold">75% menor</span>
+                  <span className="font-medium">Prazos Fiscais Cumpridos</span>
+                  <span className="text-blue-600 font-bold">100%</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-background rounded-lg">
-                  <span className="font-medium">Satisfação do Cliente</span>
-                  <span className="text-accounting-success font-bold">98%</span>
+                  <span className="font-medium">Clientes Satisfeitos</span>
+                  <span className="text-green-600 font-bold">99%</span>
+                </div>
+                <div className="mt-6 p-4 bg-blue-600/10 rounded-lg text-center">
+                  <p className="text-sm font-semibold text-blue-600">
+                    💡 Primeira consulta sempre gratuita!
+                  </p>
                 </div>
               </div>
             </div>
@@ -329,55 +428,45 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-accounting-primary to-accounting-secondary">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Pronto para Revolucionar a sua Contabilidade?
-          </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Junte-se a centenas de empresas que já transformaram a sua gestão contabilística connosco
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/login">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
-                <Users className="mr-2 h-5 w-5" />
-                Portal do Cliente
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-accounting-primary">
-              <Calculator className="mr-2 h-5 w-5" />
-              Área do Contabilista
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-accounting-primary to-accounting-secondary">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Pronto para digitalizar a sua contabilidade?
-          </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Junte-se a centenas de empresas que já confiam na RV Contabilidade para a gestão dos seus negócios.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/register-extended">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-4 bg-white text-accounting-primary hover:bg-white/90">
-                <UserCircle className="mr-2 h-5 w-5" />
-                Solicitar Acesso
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white/10">
-                Já sou cliente
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
-          <p className="text-white/70 text-sm mt-4">
-            Registo rápido • Aprovação em 24h • Suporte especializado
-          </p>
+      <section className="py-20 px-4 bg-blue-600 bg-gradient-to-r from-blue-600 to-blue-500 relative">
+        <div className="container mx-auto text-center relative z-10">
+          <ShinyText
+            text="Não deixe para depois — simplifique hoje mesmo!"
+            className="text-3xl md:text-4xl font-bold text-white mb-4"
+            background="linear-gradient(110deg, #ffffff 45%, #e0e7ff 55%, #ffffff 65%)"
+            animationSpeed={3}
+          />
+          <FadeInUpNew delay={0.3}>
+            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+              <strong>Mais de 150 pessoas já confiaram em mim.</strong> 
+              Seja o próximo a dormir descansado sabendo que está tudo em ordem.
+            </p>
+          </FadeInUpNew>
+          <ScaleInNew delay={0.5}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link to="/register-extended">
+                <Magnetic intensity={0.2}>
+                  <Button size="lg" variant="secondary" className="text-lg px-8 py-4 bg-white text-blue-600 hover:bg-white/90 hover:scale-105 transition-all">
+                    <UserCircle className="mr-2 h-5 w-5" />
+                    Quero o Meu Orçamento Grátis
+                  </Button>
+                </Magnetic>
+              </Link>
+              <Link to="/login">
+                <Magnetic intensity={0.15}>
+                  <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-blue-600 hover:scale-105 transition-all bg-transparent">
+                    Já sou cliente
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Magnetic>
+              </Link>
+            </div>
+          </ScaleInNew>
+          <FadeInUpNew delay={0.7}>
+            <p className="text-white/70 text-sm mt-4">
+              ✅ Orçamento gratuito • ✅ Primeira consulta sem compromisso • ✅ Resposta em 24h
+            </p>
+          </FadeInUpNew>
         </div>
       </section>
 
@@ -387,7 +476,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="h-10 w-10 bg-accounting-primary rounded-lg flex items-center justify-center">
+                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
                   <Calculator className="h-6 w-6 text-white" />
                 </div>
                 <div>

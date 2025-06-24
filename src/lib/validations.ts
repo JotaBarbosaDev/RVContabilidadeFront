@@ -367,7 +367,11 @@ export const registerFormSchema = z.object({
   
   // 🏢 DADOS EMPRESA MÍNIMOS
   company_name: z.string().min(2, "Nome da empresa deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
-  nipc: z.string().regex(nifRegex, "NIPC deve ter 9 dígitos").refine(validateNIPC, "NIPC inválido"),
+  nipc: z
+    .string()
+    .optional()
+    .refine((val) => !val || validateNIPC(val), 'NIPC inválido')
+    .or(z.literal('')),
   cae: z.string().regex(/^\d{5}$/, "CAE deve ter 5 dígitos"),
   legal_form: z.enum(['Lda', 'SA', 'Unipessoal', 'ENI', 'EIRL', 'Outro'], {
     required_error: "Forma jurídica é obrigatória"
