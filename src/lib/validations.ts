@@ -466,34 +466,40 @@ export const validateNumberReactive = (value: string, fieldName: string, min: nu
 };
 
 // Generic field validation function for useValidation hook
+// Schemas individuais para validação de campos
+export const fieldSchemas = {
+  username: z.string().min(3, 'Username deve ter pelo menos 3 caracteres'),
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  email: z.string().email('Email inválido'),
+  phone: z.string().min(9, 'Telefone deve ter pelo menos 9 dígitos'),
+  nif: z.string().length(9, 'NIF deve ter exatamente 9 dígitos'),
+  password: z.string().min(6, 'Password deve ter pelo menos 6 caracteres'),
+  confirmPassword: z.string(),
+  date_of_birth: z.string().min(1, 'Data de nascimento é obrigatória'),
+  fiscal_address: z.string().min(5, 'Morada fiscal é obrigatória'),
+  fiscal_postal_code: z.string().min(8, 'Código postal é obrigatório'),
+  fiscal_city: z.string().min(2, 'Localidade é obrigatória'),
+};
+
 export const validateField = (
   fieldName: string, 
-  value: string, 
-  schema: z.ZodSchema<Record<string, unknown>>
+  value: string
 ): { isValid: boolean; error?: string } => {
-  try {
-    // Create a partial object with just this field
-    const fieldData = { [fieldName]: value };
-    
-    // Try to validate the whole object (Zod will report errors for individual fields)
-    schema.parse(fieldData);
-    
+  // Usar schema individual se disponível
+  const fieldSchema = fieldSchemas[fieldName as keyof typeof fieldSchemas];
+  
+  if (!fieldSchema) {
+    return { isValid: true }; // Campo não encontrado, assume válido
+  }
+  
+  const result = fieldSchema.safeParse(value);
+  
+  if (result.success) {
     return { isValid: true };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const fieldError = error.errors.find(err => 
-        err.path.length > 0 && err.path[0] === fieldName
-      );
-      
-      return {
-        isValid: false,
-        error: fieldError?.message || 'Valor inválido'
-      };
-    }
-    
+  } else {
     return {
       isValid: false,
-      error: 'Erro de validação'
+      error: result.error.errors[0]?.message || 'Valor inválido'
     };
   }
 };

@@ -43,7 +43,7 @@ interface AuthContextType {
   checkTokenExpiry: () => void;
 }
 
-interface RegisterFormData {
+export interface RegisterFormData {
   type?: 'existing-client' | 'new-client';
   username?: string;
   password?: string;
@@ -258,145 +258,184 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (formData: RegisterFormData): Promise<{ message: string; requestId?: string }> => {
     try {
-      console.log('=== DEBUG: Form data received ===');
-      console.log('formData.name:', formData.name);
-      console.log('formData.username:', formData.username);
-      console.log('formData.nif:', formData.nif);
-      console.log('formData.email:', formData.email);
-      
-      // Usar o username fornecido pelo usuário ou gerar um se não fornecido
-      let username = formData.username;
-      
-      if (!username) {
-        // Gerar username baseado no nome da empresa com timestamp apenas se não foi fornecido
-        const baseUsername = formData.name ? 
-          formData.name.toLowerCase().replace(/[^a-z0-9]/g, '.').replace(/\.+/g, '.').replace(/^\.+|\.+$/g, '') :
-          formData.email?.split('@')[0] || 'user';
-        
-        // Adicionar timestamp para garantir unicidade
-        const timestamp = Date.now().toString().slice(-6); // Últimos 6 dígitos do timestamp
-        username = `${baseUsername}.${timestamp}`;
-      }
-
-      console.log('=== Dados de registro sendo enviados ===');
+      console.log('🎯 === DEBUG: Form data received ===');
       console.log('formData completo:', formData);
-      console.log('NIPC fornecido:', formData.nipc);
-      console.log('NIPC será enviado:', !!formData.nipc);
       
-      console.log('=== Username que será enviado ===');
-      console.log('username:', username);
+      // Função para limpar e validar dados antes do envio - VERSÃO CORRIGIDA
+      const cleanFormData = (data: RegisterFormData) => {
+        console.log('🧹 Iniciando limpeza dos dados...');
+        
+        // === FUNÇÃO AUXILIAR PARA VALIDAR VALORES ===
+        const isValidValue = (value: unknown): boolean => {
+          if (!value) return false;
+          if (typeof value !== 'string') return false;
+          
+          const trimmed = value.trim();
+          if (trimmed === '') return false;
+          
+          // Filtros para valores inválidos
+          const invalidValues = [
+            'não disponível', 'nome não disponível', 'email não disponível',
+            'telefone não disponível', 'nif não disponível', 'username não disponível',
+            'not available', 'n/a', 'na', 'null', 'undefined', 'none', 'vazio',
+            'não informado', 'não preenchido', 'sem informação'
+          ];
+          
+          return !invalidValues.some(invalid => 
+            trimmed.toLowerCase().includes(invalid.toLowerCase())
+          );
+        };
 
-      // Mapear dados do frontend para o formato correto esperado pelo backend (snake_case)
-      const registrationData = {
-        // Campos obrigatórios
-        username: username,
-        name: formData.name || "",
-        email: formData.email || "",
-        phone: formData.phone || "",
-        nif: formData.nif || "",
-        password: formData.password || "temp123", // Usar a senha fornecida ou temporária
-        company_name: formData.name || "",
-        trade_name: formData.name || "",
-        ...(formData.nipc && { nipc: formData.nipc }), // NIPC opcional - só enviar se fornecido
+        // === CAMPOS OBRIGATÓRIOS (sempre enviar) ===
+        const cleanData: Record<string, string | number> = {
+          username: data.username || generateUsername(data),
+          password: data.password || "temp123",
+          legal_form: "Empresário em Nome Individual" // Valor fixo conforme especificação
+        };
+
+        console.log('✅ Campos obrigatórios definidos:', Object.keys(cleanData));
+
+        // === MAPEAMENTO COMPLETO DE CAMPOS ===
+        const fieldMappings: Record<string, string> = {
+          // Dados pessoais
+          name: 'name',
+          email: 'email', 
+          phone: 'phone',
+          nif: 'nif',
+          dateOfBirth: 'date_of_birth',
+          
+          // Moradas
+          fiscalAddress: 'fiscal_address',
+          fiscalPostalCode: 'fiscal_postal_code', 
+          fiscalCity: 'fiscal_city',
+          address: 'address',
+          postalCode: 'postal_code',
+          city: 'city',
+          country: 'country',
+          
+          // Empresa
+          businessType: 'company_name',
+          nipc: 'nipc',
+          foundingDate: 'founding_date',
+          
+          // Configurações
+          accountingRegime: 'accounting_regime',
+          vatRegime: 'vat_regime',
+          businessActivity: 'business_activity',
+          reportFrequency: 'report_frequency'
+        };
+
+        // === CAMPOS NUMÉRICOS ===
+        const numericFields = {
+          monthlyDocuments: 'monthly_invoices'
+        };
+
+        // === PROCESSAR CAMPOS DE TEXTO ===
+        Object.entries(fieldMappings).forEach(([frontendKey, backendKey]) => {
+          const value = data[frontendKey as keyof RegisterFormData];
+          
+          if (isValidValue(value)) {
+            cleanData[backendKey] = (value as string).trim();
+            console.log(`✅ Campo ${backendKey}: ${value}`);
+          } else if (value) {
+            console.log(`❌ Campo ${frontendKey} rejeitado: "${value}"`);
+          }
+        });
+
+        // === PROCESSAR CAMPOS NUMÉRICOS ===
+        Object.entries(numericFields).forEach(([frontendKey, backendKey]) => {
+          const value = data[frontendKey as keyof RegisterFormData];
+          
+          if (value !== undefined && value !== null && value !== '') {
+            const numValue = Number(value);
+            if (!isNaN(numValue) && numValue > 0) {
+              cleanData[backendKey] = numValue;
+              console.log(`✅ Campo numérico ${backendKey}: ${numValue}`);
+            }
+          }
+        });
+
+        // === LÓGICA ESPECIAL PARA DATAS (formato YYYY-MM-DD) ===
+        if (data.dateOfBirth && isValidValue(data.dateOfBirth)) {
+          const dateStr = data.dateOfBirth.trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            cleanData.date_of_birth = dateStr;
+          }
+        }
+
+        if (data.foundingDate && isValidValue(data.foundingDate)) {
+          const dateStr = data.foundingDate.trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            cleanData.founding_date = dateStr;
+          }
+        }
+
+        console.log('🎯 Dados finais limpos:', Object.keys(cleanData));
+        console.log('📊 Total de campos:', Object.keys(cleanData).length);
         
-        // Campos de endereço obrigatórios
-        address: formData.address || "",
-        postal_code: formData.postalCode || "",
-        city: formData.city || "",
-        
-        // Campos de morada fiscal obrigatórios
-        fiscal_address: formData.fiscalAddress || formData.address || "",
-        fiscal_postal_code: formData.fiscalPostalCode || formData.postalCode || "",
-        fiscal_city: formData.fiscalCity || formData.city || "",
-        
-        country: "Portugal", // Valor padrão
-        cae: "00000", // Código de atividade econômica padrão
-        legal_form: "Empresário em Nome Individual", // Forma jurídica padrão
-        share_capital: 0.00,
-        
-        // Data de nascimento obrigatória
-        date_of_birth: formData.dateOfBirth || "1990-01-01", // Usar data fornecida ou padrão
-        
-        // Data de constituição obrigatória
-        founding_date: formData.foundingDate || new Date().toISOString().split('T')[0],
-        
-        // Campos de regime obrigatórios
-        accounting_regime: formData.accountingRegime || "organizada",
-        vat_regime: formData.vatRegime || "isento_art53",
-        
-        // Atividade empresarial obrigatória
-        business_activity: formData.businessActivity || formData.businessType || "Atividade não especificada",
-        
-        // Número de faturas mensais obrigatório
-        monthly_invoices: formData.monthlyDocuments ? parseInt(formData.monthlyDocuments) || 1 : 1,
-        
-        // Frequência de relatórios obrigatória
-        report_frequency: formData.reportFrequency || "trimestral",
-        
-        registration_date: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
-        
-        // Campos específicos para novos clientes
-        ...(formData.type === 'new-client' && {
-          business_type: formData.businessType || "",
-          business_type_other: formData.businessTypeOther || "",
-          estimated_revenue: formData.estimatedRevenue || "",
-          document_delivery: formData.documentDelivery || "",
-          invoicing_tool: formData.invoicingTool || "",
-          has_activity: formData.hasActivity || "",
-          has_social_security: formData.hasSocialSecurity || "",
-          has_employees: formData.hasEmployees || "",
-          has_debts: formData.hasDebts || "",
-          observations: formData.observations || ""
-        }),
-        
-        // Campos específicos para clientes existentes
-        ...(formData.type === 'existing-client' && {
-          access_type: formData.accessType || ""
-        })
+        return cleanData;
       };
+
+      // Função para gerar username se não fornecido
+      const generateUsername = (data: RegisterFormData): string => {
+        if (data.username && data.username.trim()) {
+          return data.username.trim();
+        }
+
+        const baseUsername = data.name ? 
+          data.name.toLowerCase().replace(/[^a-z0-9]/g, '.').replace(/\.+/g, '.').replace(/^\.+|\.+$/g, '') :
+          data.email?.split('@')[0] || 'user';
+        
+        const timestamp = Date.now().toString().slice(-6);
+        return `${baseUsername}.${timestamp}`;
+      };
+
+      // Limpar dados antes do envio
+      const cleanedData = cleanFormData(formData);
       
-      console.log('=== Dados finais para envio ao backend ===');
-      console.log('registrationData:', registrationData);
-      console.log('NIPC no payload:', registrationData.nipc);
-      console.log('NIPC está presente:', 'nipc' in registrationData);
-
-      console.log('=== DEBUG: Mapped registration data ===');
-      console.log('company_name:', `"${registrationData.company_name}"`);
-      console.log('postal_code:', `"${registrationData.postal_code}"`);
-      console.log('name:', `"${registrationData.name}"`);
-      console.log('username:', `"${registrationData.username}"`);
-      console.log('Full object:', registrationData);
-
-      console.log('Sending registration data to backend:', registrationData);
+      console.log('🎯 === RESUMO FINAL DO ENVIO ===');
+      console.log('📤 Endpoint:', 'http://localhost:8080/api/auth/register');
+      console.log('📋 Dados a enviar:', JSON.stringify(cleanedData, null, 2));
+      console.log('🔢 Total de campos:', Object.keys(cleanedData).length);
+      console.log('📝 Campos incluídos:', Object.keys(cleanedData).join(', '));
+      
+      // Validação final antes do envio
+      if (!cleanedData.username || !cleanedData.password || !cleanedData.legal_form) {
+        throw new Error('Campos obrigatórios em falta: username, password, legal_form');
+      }
 
       const response = await fetch('http://localhost:8080/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(registrationData)
+        body: JSON.stringify(cleanedData)
       });
 
-      console.log('Response status:', response.status);
+      console.log('📡 Status da resposta:', response.status);
+      console.log('📡 Headers da resposta:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         let errorMessage = 'Erro ao enviar solicitação';
         try {
           const errorData = await response.json();
-          console.log('Error response:', errorData);
-          errorMessage = errorData.message || errorData.error || errorMessage;
-        } catch {
-          console.log('Could not parse error response');
+          console.log('❌ Erro do backend:', errorData);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          console.log('❌ Não foi possível parsear erro do backend:', parseError);
+          const textError = await response.text();
+          console.log('❌ Resposta de erro (texto):', textError);
         }
         throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      console.log('Success response:', data);
+      console.log('✅ Resposta de sucesso:', data);
+      console.log('✅ Registro criado com ID:', data.data?.id);
       
       return {
         message: data.message || 'Solicitação enviada com sucesso',
-        requestId: data.requestId
+        requestId: data.data?.id || data.requestId
       };
     } catch (error) {
       console.error('Register error:', error);

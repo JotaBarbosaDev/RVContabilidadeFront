@@ -142,27 +142,71 @@ export const AdminProvider = ({ children }: AdminProviderProps) => {
     console.log('AdminContext: fetchPendingRequests called');
     setIsLoadingRequests(true);
     try {
-      const url = `${API_BASE_URL}/admin/pending-requests`;
+      // Tentar primeiro o endpoint específico de pending-requests
+      let url = `${API_BASE_URL}/admin/pending-requests`;
       const headers = getAuthHeaders();
       console.log('AdminContext: Making request to:', url);
-      console.log('AdminContext: Headers:', headers);
       
-      const response = await fetch(url, {
-        headers
-      });
-      
+      let response = await fetch(url, { headers });
       console.log('AdminContext: Response status:', response.status);
-      console.log('AdminContext: Response ok:', response.ok);
+      
+      // Se não funcionar, tentar o endpoint geral de requests
+      if (!response.ok) {
+        console.log('AdminContext: Trying fallback endpoint /admin/requests');
+        url = `${API_BASE_URL}/admin/requests`;
+        response = await fetch(url, { headers });
+        console.log('AdminContext: Fallback response status:', response.status);
+      }
+      
+      // Se ainda não funcionar, tentar o endpoint de dashboard
+      if (!response.ok) {
+        console.log('AdminContext: Trying fallback endpoint /admin/dashboard');
+        url = `${API_BASE_URL}/admin/dashboard`;
+        response = await fetch(url, { headers });
+        console.log('AdminContext: Dashboard response status:', response.status);
+      }
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('AdminContext: Error response:', errorText);
+        console.error('AdminContext: All endpoints failed, error response:', errorText);
         throw new Error(`Failed to fetch pending requests: ${response.status} ${errorText}`);
       }
       
       const data = await response.json();
       console.log('AdminContext: Received data:', data);
-      setPendingRequests(Array.isArray(data) ? data : data.data || []);
+      console.log('AdminContext: Data type:', typeof data);
+      console.log('AdminContext: Data keys:', Object.keys(data));
+      
+      let requests = [];
+      
+      if (Array.isArray(data)) {
+        console.log('AdminContext: Data is array, length:', data.length);
+        console.log('AdminContext: First item sample:', data[0]);
+        requests = data;
+      } else if (data.data) {
+        console.log('AdminContext: Data has data property:', data.data);
+        console.log('AdminContext: Data.data type:', typeof data.data);
+        if (Array.isArray(data.data)) {
+          console.log('AdminContext: Data.data is array, length:', data.data.length);
+          console.log('AdminContext: First data.data item sample:', data.data[0]);
+          requests = data.data;
+        } else if (data.data.pending_requests && Array.isArray(data.data.pending_requests)) {
+          console.log('AdminContext: Using data.data.pending_requests');
+          requests = data.data.pending_requests;
+        } else if (data.data.requests && Array.isArray(data.data.requests)) {
+          console.log('AdminContext: Using data.data.requests');
+          requests = data.data.requests;
+        }
+      } else if (data.requests && Array.isArray(data.requests)) {
+        console.log('AdminContext: Using data.requests');
+        requests = data.requests;
+      } else if (data.pending_requests && Array.isArray(data.pending_requests)) {
+        console.log('AdminContext: Using data.pending_requests');
+        requests = data.pending_requests;
+      }
+      
+      console.log('AdminContext: Final requests array:', requests);
+      setPendingRequests(requests);
     } catch (error) {
       console.error('AdminContext: Error fetching pending requests:', error);
       throw error;

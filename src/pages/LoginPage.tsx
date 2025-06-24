@@ -139,7 +139,7 @@ export default function LoginPage() {
         <div className="text-center mt-8">
           <p className="text-sm text-muted-foreground">
             Não tem conta?{" "}
-            <Link to="/register-extended" className="text-accounting-primary hover:text-accounting-primary/80 font-medium transition-colors">
+            <Link to="/register-full" className="text-accounting-primary hover:text-accounting-primary/80 font-medium transition-colors">
               Solicitar Acesso
             </Link>
           </p>

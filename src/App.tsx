@@ -6,10 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import TokenExpiryNotification from './components/TokenExpiryNotification';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ReactiveRegisterPage from './pages/ReactiveRegisterPage';
-import ExtendedRegisterPage from './pages/ExtendedRegisterPage';
-import CompleteRegisterPage from './pages/CompleteRegisterPage';
+import CompleteRegisterFormPage from './pages/CompleteRegisterFormPage';
 import DashboardPage from './pages/DashboardPage';
 import NewDashboardPage from './pages/NewDashboardPage';
 import ClientProfilePage from './pages/ClientProfilePage';
@@ -38,42 +35,22 @@ function App() {
             } 
           />
           
-          {/* Rota de registo expandido - público */}
-          <Route 
-            path="/register-extended" 
-            element={
-              <ProtectedRoute requireAuth={false}>
-                <ExtendedRegisterPage />
-              </ProtectedRoute>
-            } 
-          />
-          
           {/* Rota de registo completo - público */}
-          <Route 
-            path="/register-complete" 
-            element={
-              <ProtectedRoute requireAuth={false}>
-                <CompleteRegisterPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Rota de registo reativo - público */}
           <Route 
             path="/register" 
             element={
               <ProtectedRoute requireAuth={false}>
-                <ReactiveRegisterPage />
+                <CompleteRegisterFormPage />
               </ProtectedRoute>
             } 
           />
           
-          {/* Rota de registo antigo - público */}
+          {/* Rota de registo completo com todos os campos - público */}
           <Route 
-            path="/register-old" 
+            path="/register-full" 
             element={
               <ProtectedRoute requireAuth={false}>
-                <RegisterPage />
+                <CompleteRegisterFormPage />
               </ProtectedRoute>
             } 
           />

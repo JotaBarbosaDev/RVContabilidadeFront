@@ -108,7 +108,7 @@ export default function LandingPage() {
               </FadeInUpNew>
               <ScaleInNew delay={0.5}>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/register-extended">
+                  <Link to="/register-full">
                     <Magnetic intensity={0.2}>
                       <Button size="lg" className="bg-blue-600 hover:bg-blue-600/90 text-lg px-8 py-4 relative overflow-hidden group">
                         <span className="relative z-10">Peça o Seu Orçamento Grátis</span>
@@ -444,7 +444,7 @@ export default function LandingPage() {
           </FadeInUpNew>
           <ScaleInNew delay={0.5}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/register-extended">
+              <Link to="/register-full">
                 <Magnetic intensity={0.2}>
                   <Button size="lg" variant="secondary" className="text-lg px-8 py-4 bg-white text-blue-600 hover:bg-white/90 hover:scale-105 transition-all">
                     <UserCircle className="mr-2 h-5 w-5" />

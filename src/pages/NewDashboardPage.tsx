@@ -16,7 +16,6 @@ import {
   Users,
   Activity,
   Shield,
-  Database,
   User,
   Phone,
   Mail,
@@ -25,7 +24,7 @@ import {
   Check,
   X
 } from "lucide-react"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 
 interface ClientSummary {
   name: string;
@@ -35,70 +34,221 @@ interface ClientSummary {
   nipc: string;
 }
 
+interface DashboardStats {
+  totalClients: number;
+  pendingRequests: number;
+  approvedClients: number;
+  rejectedClients: number;
+  totalRevenue?: number;
+  pendingObligations?: number;
+}
+
 export default function NewDashboardPage() {
   const { user, getAccessibleCompanies, token } = useAuth();
   const adminContext = useAdmin();
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
+  // Estado inicial vazio - apenas dados reais da BD
   const [recentClients, setRecentClients] = useState<ClientSummary[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    totalClients: 0,
+    pendingRequests: 0,
+    approvedClients: 0,
+    rejectedClients: 0,
+    totalRevenue: 0,
+    pendingObligations: 0
+  });
   const [isLoadingClients, setIsLoadingClients] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
   const hasInitialized = useRef(false);
 
-  useEffect(() => {
-    if (user?.type === 'accountant' && adminContext?.fetchPendingRequests && !hasInitialized.current) {
-      hasInitialized.current = true;
-      adminContext.fetchPendingRequests();
-      loadRecentClients();
+  // Função para carregar estatísticas do dashboard usando endpoint complete-users-overview
+  const loadDashboardStats = useCallback(async () => {
+    if (!token) {
+      console.log('❌ Token não disponível para carregar estatísticas');
+      return;
     }
-  }); // Removendo array de dependências para evitar loops
-
-  const loadRecentClients = async () => {
-    if (!token || user?.type !== 'accountant') return;
     
-    setIsLoadingClients(true);
+    console.log('🔍 === CARREGANDO ESTATÍSTICAS DO DASHBOARD (ENDPOINT COMPLETE-USERS-OVERVIEW) ===');
+    setIsLoadingStats(true);
+    
     try {
-      // Usar a nova API que retorna estrutura com users e stats
-      const response = await fetch('http://localhost:8080/api/admin/users?role=client', {
+      const response = await fetch('http://localhost:8080/api/admin/complete-users-overview', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('📡 Complete users overview response status:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ COMPLETE USERS OVERVIEW RESULT:', JSON.stringify(result, null, 2));
+        
+        // O endpoint retorna um array de usuários em result.data
+        const users = result.data || [];
+        console.log('👥 Total de usuários encontrados:', users.length);
+        
+        // Contar usuários por status
+        const approvedUsers = users.filter((user: Record<string, unknown>) => user.status === 'approved');
+        const pendingUsers = users.filter((user: Record<string, unknown>) => user.status === 'pending');
+        const rejectedUsers = users.filter((user: Record<string, unknown>) => user.status === 'rejected');
+        const blockedUsers = users.filter((user: Record<string, unknown>) => user.status === 'blocked');
+        
+        // Contar apenas clientes aprovados (não incluir admin/accountant)
+        const approvedClients = approvedUsers.filter((user: Record<string, unknown>) => user.role === 'client');
+        const allClients = users.filter((user: Record<string, unknown>) => user.role === 'client');
+        
+        console.log('📊 Contagem por status:', {
+          'Total usuários': users.length,
+          'Total clientes (todos)': allClients.length,
+          'Clientes aprovados': approvedClients.length,
+          'Usuários aprovados (todos)': approvedUsers.length,
+          'Usuários pendentes': pendingUsers.length,
+          'Usuários rejeitados': rejectedUsers.length,
+          'Usuários bloqueados': blockedUsers.length
+        });
+        
+        // Extrair as estatísticas do endpoint
+        const stats = {
+          totalClients: allClients.length, // Total de clientes (todos os status)
+          pendingRequests: pendingUsers.length, // Todos os pending
+          approvedClients: approvedClients.length, // Apenas clientes aprovados
+          rejectedClients: rejectedUsers.length, // Todos os rejeitados
+          blockedClients: blockedUsers.length, // Todos os bloqueados
+          totalRevenue: 0, // Pode ser adicionado no futuro pelo backend
+          pendingObligations: 0 // Pode ser adicionado no futuro pelo backend
+        };
+        
+        console.log('📊 Estatísticas finais do dashboard:', {
+          totalClientes: stats.totalClients,
+          clientesAprovados: stats.approvedClients,
+          pedidosPendentes: stats.pendingRequests,
+          rejeitados: stats.rejectedClients,
+          bloqueados: stats.blockedClients
+        });
+        
+        setDashboardStats(stats);
+        setIsLoadingStats(false);
+        return;
+      } else {
+        const errorText = await response.text();
+        console.log('❌ Complete users overview error:', errorText);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar estatísticas do dashboard:', error);
+    }
+    
+    // Se falhou, manter valores zerados
+    console.log('❌ Não foi possível carregar estatísticas - usando valores padrão');
+    const defaultStats = {
+      totalClients: 0,
+      pendingRequests: 0,
+      approvedClients: 0,
+      rejectedClients: 0,
+      blockedClients: 0,
+      totalRevenue: 0,
+      pendingObligations: 0
+    };
+    
+    setDashboardStats(defaultStats);
+    setIsLoadingStats(false);
+  }, [token]);
+
+  // Função para carregar clientes recentes usando o mesmo endpoint complete-users-overview
+  const loadRecentClients = useCallback(async () => {
+    if (!token) {
+      console.log('❌ Token não disponível para carregar clientes');
+      return;
+    }
+    
+    console.log('🔍 === CARREGANDO CLIENTES RECENTES (ENDPOINT COMPLETE-USERS-OVERVIEW) ===');
+    setIsLoadingClients(true);
+    
+    try {
+      const response = await fetch('http://localhost:8080/api/admin/complete-users-overview', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
+      console.log(`📊 Status da resposta: ${response.status}`);
+      
       if (response.ok) {
         const result = await response.json();
-        if (result.success && result.data) {
-          // Nova estrutura: result.data.users contém os clientes
-          const clients = (result.data.users || [])
-            .sort((a: {created_at: string}, b: {created_at: string}) => 
-              new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-            .slice(0, 4)
-            .map((client: {company_name?: string, name: string, email: string, username?: string, status: string, nipc?: string}) => ({
-              name: client.company_name || client.name,
-              email: client.email,
-              username: client.username,
-              status: client.status === 'approved' ? 'Em dia' : 
-                     client.status === 'pending' ? 'Pendente' : 
-                     client.status === 'rejected' ? 'Rejeitado' : 'Urgente',
+        console.log('✅ Resposta da API (clientes recentes):', result);
+        
+        // O endpoint retorna um array de usuários em result.data
+        const users = result.data || [];
+        console.log('👥 Total de usuários encontrados:', users.length);
+        
+        // Filtrar apenas clientes aprovados
+        const approvedClients = users.filter((user: Record<string, unknown>) => 
+          user.role === 'client' && user.status === 'approved'
+        );
+        
+        console.log('✅ Clientes aprovados encontrados:', approvedClients.length);
+        
+        if (approvedClients.length > 0) {
+          // Processar clientes aprovados - pegar os 4 mais recentes
+          const processedClients = approvedClients
+            .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+              const dateA = new Date(a.user_created_at as string || a.user_updated_at as string || 0).getTime();
+              const dateB = new Date(b.user_created_at as string || b.user_updated_at as string || 0).getTime();
+              return dateB - dateA;
+            })
+            .slice(0, 4) // Últimos 4 clientes aprovados
+            .map((client: Record<string, unknown>) => ({
+              name: client.company_name || client.name || 'Nome não disponível',
+              email: client.email || 'Email não disponível',
+              username: client.username || '',
+              status: 'Aprovado', // Todos são aprovados por causa do filtro
               nipc: client.nipc || 'N/A'
             }));
-          setRecentClients(clients);
+          
+          console.log('✅ Clientes recentes processados:', processedClients.length);
+          console.log('📋 Dados dos clientes recentes:', processedClients);
+          setRecentClients(processedClients);
+        } else {
+          console.log('⚠️ Nenhum cliente aprovado encontrado');
+          setRecentClients([]);
         }
+      } else {
+        console.log(`❌ Erro na resposta: Status ${response.status}`);
+        const errorText = await response.text();
+        console.log('❌ Detalhes do erro:', errorText);
+        setRecentClients([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar clientes:', error);
-      // Fallback para dados mock
-      setRecentClients([
-        { name: "Tech Solutions Lda", email: "contacto@techsolutions.pt", status: "Em dia", nipc: "501234567" },
-        { name: "Inovação Digital Unip Lda", email: "fiscal@inovacao.pt", status: "Pendente", nipc: "501234568" },
-        { name: "Consultoria Estratégica SA", email: "admin@consultoria.pt", status: "Em dia", nipc: "501234569" },
-        { name: "Serviços Gerais Lda", email: "juridico@servicos.pt", status: "Urgente", nipc: "501234570" },
-      ]);
+      console.error('❌ Erro na requisição:', error);
+      setRecentClients([]);  
     } finally {
       setIsLoadingClients(false);
     }
-  };
+  }, [token]);
 
+  // UseEffect para inicializar os dados
+  useEffect(() => {
+    console.log('🔍 Dashboard useEffect - User type:', user?.type);
+    console.log('🔍 Dashboard useEffect - Admin context available:', !!adminContext?.fetchPendingRequests);
+    console.log('🔍 Dashboard useEffect - Pending requests:', adminContext?.pendingRequests?.length || 0);
+    
+    if ((user?.type === 'accountant' || user?.type === 'admin') && token && !hasInitialized.current) {
+      console.log(`✅ Inicializando dashboard para ${user.type}...`);
+      hasInitialized.current = true;
+      
+      // Executar as chamadas de dados
+      if (adminContext?.fetchPendingRequests) {
+        adminContext.fetchPendingRequests();
+      }
+      loadRecentClients();
+      loadDashboardStats();
+    }
+  }, [user?.type, adminContext, token, loadRecentClients, loadDashboardStats]);
+
+  // Função para aprovar/rejeitar pedidos
   const handleApproveRequest = async (requestId: string, approved: boolean) => {
     const action = approved ? 'aprovar' : 'rejeitar';
     const confirmMessage = `Tem certeza que deseja ${action} este pedido?`;
@@ -113,6 +263,9 @@ export default function NewDashboardPage() {
         await adminContext.approveRequest(requestId, approved);
         // Mostrar feedback de sucesso
         alert(`Pedido ${approved ? 'aprovado' : 'rejeitado'} com sucesso!`);
+        
+        // Recarregar estatísticas após aprovação/rejeição
+        loadDashboardStats();
       }
     } catch (error) {
       console.error('Erro ao processar pedido:', error);
@@ -206,8 +359,12 @@ export default function NewDashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">24</div>
-              <p className="text-xs text-muted-foreground">+2 este mês</p>
+              <div className="text-2xl font-bold text-card-foreground">
+                {isLoadingStats ? '...' : dashboardStats.totalClients}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {dashboardStats.approvedClients} aprovados
+              </p>
             </CardContent>
           </Card>
 
@@ -220,10 +377,10 @@ export default function NewDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-card-foreground">
-                €210
+                {isLoadingStats ? '...' : `€${dashboardStats.totalRevenue || 0}`}
               </div>
               <p className="text-xs text-muted-foreground">
-                +12% mês anterior
+                Receita total
               </p>
             </CardContent>
           </Card>
@@ -236,7 +393,9 @@ export default function NewDashboardPage() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">7</div>
+              <div className="text-2xl font-bold text-card-foreground">
+                {isLoadingStats ? '...' : dashboardStats.pendingObligations || 0}
+              </div>
               <p className="text-xs text-muted-foreground">Para esta semana</p>
             </CardContent>
           </Card>
@@ -250,7 +409,7 @@ export default function NewDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {(adminContext?.pendingRequests || []).length}
+                {isLoadingStats ? '...' : dashboardStats.pendingRequests}
               </div>
               <p className="text-xs text-muted-foreground">Para aprovação</p>
             </CardContent>
@@ -264,52 +423,60 @@ export default function NewDashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Utilizadores Ativos</CardTitle>
+              <CardTitle className="text-sm font-medium text-card-foreground">Total de Clientes</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">47</div>
+              <div className="text-2xl font-bold text-card-foreground">
+                {isLoadingStats ? '...' : dashboardStats.totalClients}
+              </div>
               <p className="text-xs text-muted-foreground">
-                +3 esta semana
+                {dashboardStats.approvedClients} aprovados
               </p>
             </CardContent>
           </Card>
           
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Performance Sistema</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-card-foreground">Pedidos Pendentes</CardTitle>
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">98.5%</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {isLoadingStats ? '...' : dashboardStats.pendingRequests}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Uptime últimos 30 dias
+                Para aprovação
               </p>
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Alertas de Segurança</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-card-foreground">Clientes Rejeitados</CardTitle>
+              <X className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">2</div>
+              <div className="text-2xl font-bold text-red-600">
+                {isLoadingStats ? '...' : dashboardStats.rejectedClients}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Requerem atenção
+                Total rejeitados
               </p>
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">Uso do Sistema</CardTitle>
-              <Database className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-card-foreground">Receita Total</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">76%</div>
+              <div className="text-2xl font-bold text-card-foreground">
+                {isLoadingStats ? '...' : `€${dashboardStats.totalRevenue || 0}`}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Capacidade utilizada
+                Receita acumulada
               </p>
             </CardContent>
           </Card>
@@ -320,7 +487,7 @@ export default function NewDashboardPage() {
     return null;
   };
 
-  // Componente para exibir conteúdo específico do cliente
+  // Conteúdo específico para cada tipo de usuário
   const getClientContent = () => (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
@@ -382,7 +549,6 @@ export default function NewDashboardPage() {
     </div>
   );
 
-  // Componente para exibir conteúdo específico do contabilista
   const getAccountantContent = () => {
     const obligations = [
       { title: "Declaração Mensal IVA", due: "2025-01-15", status: "pending", company: "Tech Solutions Lda" },
@@ -424,23 +590,23 @@ export default function NewDashboardPage() {
                   const requestFormData = requestData.request_data as Record<string, unknown> | undefined;
                   const submittedAt = requestData.submitted_at as string | undefined;
                   
-                  // Dados a serem exibidos (priorizar user se existir, senão request_data)
+                  // Dados a serem exibidos (dados estão diretamente no request, não em sub-objetos)
                   const displayData = {
-                    name: String(userInfo?.name || requestFormData?.name || 'Nome não disponível'),
-                    email: String(userInfo?.email || requestFormData?.email || 'Email não disponível'),
-                    phone: String(userInfo?.phone || requestFormData?.phone || 'Telefone não disponível'),
-                    nif: String(userInfo?.nif || requestFormData?.nif || 'NIF não disponível'),
-                    username: String(requestFormData?.username || ''),
-                    companyName: String(requestFormData?.company_name || ''),
-                    tradeName: String(requestFormData?.trade_name || ''),
-                    nipc: String(requestFormData?.nipc || ''),
-                    legalForm: String(requestFormData?.legal_form || ''),
-                    cae: String(requestFormData?.cae || ''),
-                    shareCapital: String(requestFormData?.share_capital || ''),
-                    address: String(requestFormData?.address || ''),
-                    postalCode: String(requestFormData?.postal_code || ''),
-                    city: String(requestFormData?.city || ''),
-                    country: String(requestFormData?.country || '')
+                    name: String(requestData.name || userInfo?.name || requestFormData?.name || 'Nome não disponível'),
+                    email: String(requestData.email || userInfo?.email || requestFormData?.email || 'Email não disponível'),
+                    phone: String(requestData.phone || userInfo?.phone || requestFormData?.phone || 'Telefone não disponível'),
+                    nif: String(requestData.nif || userInfo?.nif || requestFormData?.nif || 'NIF não disponível'),
+                    username: String(requestData.username || requestFormData?.username || ''),
+                    companyName: String(requestData.company_name || requestFormData?.company_name || ''),
+                    tradeName: String(requestData.trade_name || requestFormData?.trade_name || ''),
+                    nipc: String(requestData.nipc || requestFormData?.nipc || ''),
+                    legalForm: String(requestData.legal_form || requestFormData?.legal_form || ''),
+                    cae: String(requestData.cae || requestFormData?.cae || ''),
+                    shareCapital: String(requestData.share_capital || requestFormData?.share_capital || ''),
+                    address: String(requestData.fiscal_address || requestData.address || requestFormData?.address || ''),
+                    postalCode: String(requestData.fiscal_postal_code || requestData.postal_code || requestFormData?.postal_code || ''),
+                    city: String(requestData.fiscal_city || requestData.city || requestFormData?.city || ''),
+                    country: String(requestData.country || requestFormData?.country || '')
                   };
                           
                           return (
@@ -703,7 +869,7 @@ export default function NewDashboardPage() {
                       </div>
                     </div>
                     <Badge 
-                      variant={client.status === "Em dia" ? "default" : 
+                      variant={client.status === "Aprovado" ? "default" : 
                               client.status === "Pendente" ? "secondary" : "destructive"}
                     >
                       {client.status}
@@ -748,7 +914,6 @@ export default function NewDashboardPage() {
     );
   };
 
-  // Componente para exibir conteúdo específico do admin
   const getAdminContent = () => (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">

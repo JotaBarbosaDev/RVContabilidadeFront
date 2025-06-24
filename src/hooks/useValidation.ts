@@ -51,7 +51,7 @@ export const useValidation = <T extends Record<string, unknown>>(
   
   // Validar um campo específico
   const validateFieldAsync = useCallback((fieldName: keyof T, value: string) => {
-    const validation = validateField(fieldName as string, value, schema);
+    const validation = validateField(fieldName as string, value);
     
     setFields(prev => ({
       ...prev,
@@ -62,7 +62,7 @@ export const useValidation = <T extends Record<string, unknown>>(
         isValidating: false,
       }
     }));
-  }, [schema]);
+  }, []);
   
   // Atualizar valor de um campo
   const setValue = useCallback((fieldName: keyof T, value: string) => {

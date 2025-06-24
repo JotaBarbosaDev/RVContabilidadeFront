@@ -41,6 +41,45 @@ import {
   RefreshCw
 } from 'lucide-react';
 
+interface ClientRequest {
+  id: string;
+  name?: string;
+  full_name?: string;
+  email: string;
+  username?: string;
+  phone: string;
+  nif: string;
+  address?: string;
+  postal_code?: string;
+  city?: string;
+  status?: 'approved' | 'pending' | 'rejected' | 'blocked';
+  company_name?: string;
+  nipc?: string;
+  created_at: string;
+  updated_at?: string;
+  date_of_birth?: string;
+  fiscal_address?: string;
+  fiscal_postal_code?: string;
+  fiscal_city?: string;
+  cae?: string;
+  legal_form?: string;
+  founding_date?: string;
+  accounting_regime?: string;
+  vat_regime?: string;
+  business_activity?: string;
+  estimated_revenue?: number;
+  monthly_invoices?: number;
+  number_employees?: number;
+  report_frequency?: string;
+  has_company?: boolean;
+  marital_status?: string;
+  citizen_card_number?: string;
+  trade_name?: string;
+  annual_revenue?: number;
+  main_clients?: string;
+  main_suppliers?: string;
+}
+
 interface ClientStats {
   total_clients: number;
   approved_clients: number;
@@ -244,8 +283,82 @@ export default function AccountantClientsPage() {
     return stats;
   };
 
-  const fetchClientsData = useCallback(async () => {
-    const response = await fetch('http://localhost:8080/api/admin/users?role=client', {
+  const fetchClientsFallback = useCallback(async () => {
+    console.log('🔄 Using fallback endpoints...');
+    
+    // Primeiro, tentar o endpoint de dashboard que pode ter dados consolidados
+    let response = await fetch('http://localhost:8080/api/admin/dashboard', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('📊 Dashboard API Response:', result);
+      
+      if (result.success && result.data && result.data.pending_requests) {
+        const requestsList = result.data.pending_requests;
+        
+        // Converter para formato de clientes
+        const clientsList = requestsList.map((request: ClientRequest) => ({
+          id: request.id,
+          name: request.name || request.full_name,
+          email: request.email,
+          username: request.username || request.email,
+          phone: request.phone,
+          nif: request.nif,
+          address: request.address,
+          postal_code: request.postal_code,
+          city: request.city,
+          status: request.status || 'pending',
+          role: 'client' as const,
+          company_name: request.company_name,
+          nipc: request.nipc,
+          created_at: request.created_at,
+          updated_at: request.updated_at,
+          date_of_birth: request.date_of_birth,
+          fiscal_address: request.fiscal_address,
+          fiscal_postal_code: request.fiscal_postal_code,
+          fiscal_city: request.fiscal_city,
+          cae: request.cae,
+          legal_form: request.legal_form,
+          founding_date: request.founding_date,
+          accounting_regime: request.accounting_regime,
+          vat_regime: request.vat_regime,
+          business_activity: request.business_activity,
+          estimated_revenue: request.estimated_revenue,
+          monthly_invoices: request.monthly_invoices,
+          number_employees: request.number_employees,
+          report_frequency: request.report_frequency,
+          has_company: request.has_company,
+          marital_status: request.marital_status,
+          citizen_card_number: request.citizen_card_number,
+          trade_name: request.trade_name,
+          annual_revenue: request.annual_revenue,
+          main_clients: request.main_clients,
+          main_suppliers: request.main_suppliers,
+        }));
+        
+        console.log('✅ Dashboard data loaded successfully:', clientsList.length);
+        setClients(clientsList);
+        
+        // Usar stats do dashboard se disponível
+        if (result.data.stats) {
+          setStats(result.data.stats);
+        } else {
+          const calculatedStats = calculateStats(clientsList);
+          setStats(calculatedStats);
+        }
+        
+        return true;
+      }
+    }
+    
+    // Se o dashboard não funcionar, usar o endpoint original
+    console.log('🔄 Using original fallback endpoint: /api/admin/users?role=client');
+    response = await fetch('http://localhost:8080/api/admin/users?role=client', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -254,15 +367,11 @@ export default function AccountantClientsPage() {
 
     if (response.ok) {
       const result = await response.json();
-      console.log('API Response:', result); // Debug log
+      console.log('👥 Fallback API Response:', result);
       if (result.success && result.data) {
-        // Nova estrutura da API - data contém users e stats
         const clientsList = result.data.users || [];
         setClients(clientsList);
         
-        console.log('Stats from API:', result.data.stats); // Debug log
-        
-        // Verificar se stats existe e não está vazio/zerado
         const apiStats = result.data.stats;
         const hasValidStats = apiStats && (
           apiStats.total_clients > 0 || 
@@ -274,25 +383,158 @@ export default function AccountantClientsPage() {
         );
         
         if (hasValidStats) {
-          console.log('Using API stats:', apiStats);
           setStats(apiStats);
         } else {
-          console.log('API stats empty or invalid, calculating from client list');
           const calculatedStats = calculateStats(clientsList);
-          console.log('Calculated stats:', calculatedStats);
           setStats(calculatedStats);
         }
         return true;
+      }
+    }
+    
+    console.error('❌ All fallback endpoints failed');
+    setClients([]);
+    return false;
+  }, [token]);
+
+  const fetchClientsData = useCallback(async () => {
+    console.log('🔍 Fetching clients data for accountant...');
+    console.log('🔑 Token present:', !!token);
+    console.log('🔑 Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
+    
+    // Primeiro, tentar buscar solicitações pendentes específicas
+    let response = await fetch('http://localhost:8080/api/admin/pending-requests', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('📡 Pending requests response status:', response.status);
+    
+    // Se não funcionar, tentar o endpoint geral de requests
+    if (!response.ok) {
+      console.log('🔄 Trying general requests endpoint...');
+      response = await fetch('http://localhost:8080/api/admin/requests', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('📡 General requests response status:', response.status);
+    }
+
+    console.log('📡 Final response ok:', response.ok);
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ API Response:', result); // Debug log
+      console.log('✅ API Response type:', typeof result);
+      console.log('✅ API Response keys:', Object.keys(result));
+      
+      if (result.success || Array.isArray(result)) {
+        // Verificar se é uma lista de requests diretamente ou dentro de uma propriedade
+        let requestsList = [];
+        
+        if (Array.isArray(result)) {
+          // Se result é um array direto de requests
+          requestsList = result;
+          console.log('📋 Direct array of requests:', requestsList.length);
+          console.log('📋 First request sample:', requestsList[0]);
+        } else if (result.data && Array.isArray(result.data)) {
+          // Se result.data é um array de requests
+          requestsList = result.data;
+          console.log('📋 Requests from result.data:', requestsList.length);
+          console.log('📋 First request sample:', requestsList[0]);
+        } else if (result.requests && Array.isArray(result.requests)) {
+          // Se result.requests é um array de requests
+          requestsList = result.requests;
+          console.log('📋 Requests from result.requests:', requestsList.length);
+          console.log('📋 First request sample:', requestsList[0]);
+        } else {
+          console.log('❌ Unexpected data format:', result);
+          console.log('❌ Result structure:');
+          if (result.data) {
+            console.log('  - result.data:', result.data);
+            console.log('  - result.data type:', typeof result.data);
+            console.log('  - result.data keys:', Object.keys(result.data));
+          }
+          return await fetchClientsFallback();
+        }
+        
+        // Converter requests para formato de clientes
+        console.log('🔄 Converting requests to clients format...');
+        const clientsList = requestsList.map((request: ClientRequest, index: number) => {
+          console.log(`📄 Processing request ${index + 1}:`, {
+            id: request.id,
+            name: request.name,
+            full_name: request.full_name,
+            email: request.email,
+            phone: request.phone,
+            nif: request.nif,
+            status: request.status
+          });
+          
+          return {
+            id: request.id,
+            name: request.name || request.full_name || 'Nome não disponível',
+            email: request.email || 'Email não disponível',
+            username: request.username || request.email || 'Username não disponível',
+            phone: request.phone || 'Telefone não disponível',
+            nif: request.nif || 'NIF não disponível',
+            address: request.address,
+            postal_code: request.postal_code,
+            city: request.city,
+            status: request.status || 'pending',
+            role: 'client',
+            company_name: request.company_name,
+            nipc: request.nipc,
+            created_at: request.created_at || new Date().toISOString(),
+            updated_at: request.updated_at || new Date().toISOString(),
+            // Outros campos específicos do request
+            date_of_birth: request.date_of_birth,
+            fiscal_address: request.fiscal_address,
+            fiscal_postal_code: request.fiscal_postal_code,
+            fiscal_city: request.fiscal_city,
+            cae: request.cae,
+            legal_form: request.legal_form,
+            founding_date: request.founding_date,
+            accounting_regime: request.accounting_regime,
+            vat_regime: request.vat_regime,
+            business_activity: request.business_activity,
+            estimated_revenue: request.estimated_revenue,
+            monthly_invoices: request.monthly_invoices,
+            number_employees: request.number_employees,
+            report_frequency: request.report_frequency,
+            has_company: request.has_company,
+            marital_status: request.marital_status,
+            citizen_card_number: request.citizen_card_number,
+            trade_name: request.trade_name,
+            annual_revenue: request.annual_revenue,
+            main_clients: request.main_clients,
+            main_suppliers: request.main_suppliers,
+          };
+        });
+        
+        console.log('👥 Converted clients list:', clientsList.length);
+        setClients(clientsList);
+        
+        // Calcular stats baseado na lista de clientes
+        const calculatedStats = calculateStats(clientsList);
+        console.log('📊 Calculated stats:', calculatedStats);
+        setStats(calculatedStats);
+        
+        return true;
       } else {
-        setClients([]);
-        return false;
+        console.log('❌ No success or data in response, trying fallback...');
+        return await fetchClientsFallback();
       }
     } else {
-      console.error('Erro ao carregar clientes:', response.status);
-      setClients([]);
-      return false;
+      console.error('❌ Error loading clients:', response.status);
+      console.log('🔄 Trying fallback endpoint...');
+      return await fetchClientsFallback();
     }
-  }, [token]);
+  }, [token, fetchClientsFallback]);
 
   useEffect(() => {
     const loadClients = async () => {
